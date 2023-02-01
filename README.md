@@ -1,7 +1,7 @@
-# Project-3-IT1F
+# Project Robotix Enterprise
 
 ### Project description
-Repository created for the project - Battle Bots
+Repository created for the project - Battle Bots created by team Robotix Enterprise
 
 ### Team members
 * Ada Bilici - Team Leader
@@ -18,4 +18,4 @@ Repository created for the project - Battle Bots
 ### Built with
 
 ### Copyright
- © 2023 IT1F, Inc. All rights reserved.
+ © 2023 Robotix Enterprise, Inc. All rights reserved.
