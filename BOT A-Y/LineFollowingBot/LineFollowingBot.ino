@@ -1,10 +1,12 @@
+#include <Servo.h>
+
 // wheel movement and sensors
 int wheelAForeward = 10;
 int wheelABackward = 13;
 int wheelBBackward = 12;
 int wheelBForeward = 11;
 int wheelBSensor = 5;
-int wheelASensor = 6;
+int wheelASensor = 7;
 
 // echo sensor
 int distanceTrig = 8;
@@ -19,6 +21,10 @@ int LS5 = A4;
 int LS6 = A5;
 int LS7 = A6;
 int LS8 = A7;
+
+// gripper
+int gripperPin = 6;
+Servo gripper;
 
 // yellow led (for testing)
 int Lled = 3;
@@ -44,6 +50,7 @@ pinMode(LS6, INPUT);
 pinMode(LS7, INPUT);
 pinMode(LS8, INPUT);
 
+gripper.attach(gripperPin);
 pinMode(Lled, OUTPUT);
 Serial.begin(9600);
 
@@ -51,9 +58,12 @@ Serial.begin(9600);
 }
 
 void loop() {
-  Serial.print(analogRead(LS4));
-  Serial.println();
-  delay(500);
+
+}
+
+// grab an object using a grabber, or move the grabber to the specified degrees using the optional argument
+void grab(int degrees = 0){
+  gripper.write(degrees);  
 }
 
 // moves the robot foreward, not practical, to be used for testing
