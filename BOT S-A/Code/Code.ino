@@ -1,5 +1,6 @@
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
+#include <Servo.h>
 // the setup function runs once when you press reset or power the board
 //int ledRed=13;
 //int ledYellow=12;
@@ -9,7 +10,9 @@
 
 const int trigPin = 8;
 const int echoPin = 9;
-
+//
+const int gripper_pin=10;
+Servo gripper;
 //bluetooth
 
 long duration;
@@ -42,12 +45,15 @@ const int PIXEL_PIN=7;
 const int PIXEL_NUMBER=4;
 
 //colors
+
 Adafruit_NeoPixel leds(PIXEL_NUMBER, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
 const uint32_t RED=leds.Color(255,0,0);
 const uint32_t YELLOW=leds.Color(255,150,0);
 const uint32_t BLUE=leds.Color(0,0,255);
 const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
+
+//Functions
 
 void moveForward(int power=255)
 {
@@ -67,6 +73,8 @@ void moveBackwards(int power=255)
   analogWrite(MOTOR_B2,power);
 }
 
+//SETUP 
+
 void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
@@ -77,17 +85,16 @@ void setup() {
   leds.show();
   setup_motor_pins();
   pinMode(BUTTON1,INPUT);
+  pinMode(BUTTON2,INPUT);
+  gripper.attach(gripper_pin);
 }
 
 // the loop function runs over and over again forever
-
+int value=0;
 void loop() {
-  //distance senzor
-  
-    // Clears the trigPin
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
+  //distance 
+  // Sets the trigPin on HIGH state for 10 micro secondssensor
+ 
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
@@ -104,6 +111,7 @@ void loop() {
   
   buttonState1=digitalRead(BUTTON1);
   buttonState2=digitalRead(BUTTON2);
+ /* 
   if (buttonState1==LOW)
   {
   moveForward(255);
@@ -113,7 +121,8 @@ void loop() {
     analogWrite(MOTOR_A1,0);
     analogWrite(MOTOR_B1,0);
     }
-    
+
+
   if (buttonState2==LOW)
   {
     moveBackwards(255);
@@ -122,10 +131,20 @@ void loop() {
     analogWrite(MOTOR_A2,0);
     analogWrite(MOTOR_B2,0);
     }
-  leds.fill(START,0,4);
+*/
+ if(buttonState1==LOW)
+ {value++;
+ gripper.write(180);
+ delay(5000);
+ }
+ 
+ if(value>0)
+ value --;
+ 
+ gripper.write(0);
+ leds.fill(START,0,4);
   leds.show();
 }
-
 //Functions
 void setup_motor_pins()
 {
@@ -133,4 +152,7 @@ void setup_motor_pins()
   pinMode(MOTOR_A2,OUTPUT);
   pinMode(MOTOR_B1,OUTPUT);
   pinMode(MOTOR_B2,OUTPUT);
-}
+} 
+    // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
