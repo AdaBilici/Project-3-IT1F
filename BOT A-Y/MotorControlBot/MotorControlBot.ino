@@ -1,9 +1,9 @@
 
 //================||PWM MOTOR PINS||=========================
-int wheelAForwards = 10;
-int wheelABackwards = 9;
-int wheelBForwards = 6;
-int wheelBBackwards = 5;
+int LeftWheelForwards = 10;
+int LeftWheelBackwards = 9;
+int RightWheelForwards = 6;
+int RightWheelBackwards = 5;
 //==========================================================
 
 
@@ -12,65 +12,112 @@ void setup() {
 
   //initialize serial monitor and output pins
   Serial.begin(9600);
-  pinMode(wheelAForwards, OUTPUT);
-  pinMode(wheelABackwards, OUTPUT);
-  pinMode(wheelBForwards, OUTPUT);
-  pinMode(wheelBBackwards, OUTPUT);
+  pinMode(LeftWheelForwards, OUTPUT);
+  pinMode(LeftWheelBackwards, OUTPUT);
+  pinMode(RightWheelForwards, OUTPUT);
+  pinMode(RightWheelBackwards, OUTPUT);
      
+}
+
+void forwards()
+{
+ analogWrite(LeftWheelForwards, 255);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 255);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void backwards()
+{
+ analogWrite(LeftWheelForwards, 0);
+ analogWrite(LeftWheelBackwards, 255);
+ analogWrite(RightWheelForwards, 0);
+ analogWrite(RightWheelBackwards, 255);
+}
+
+void sharpLeft()
+{
+ analogWrite(LeftWheelForwards, 0);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 255);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void sharpRight()
+{
+ analogWrite(LeftWheelForwards, 255);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 0);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void slowLeft()
+{
+ analogWrite(LeftWheelForwards, 200);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 255);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void slowRight()
+{
+ analogWrite(LeftWheelForwards, 255);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 200);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void stopCar()
+{
+ analogWrite(LeftWheelForwards, 0);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 0);
+ analogWrite(RightWheelBackwards, 0);
+}
+
+void rotate()
+{
+ analogWrite(LeftWheelForwards, 255);
+ analogWrite(LeftWheelBackwards, 0);
+ analogWrite(RightWheelForwards, 0);
+ analogWrite(RightWheelBackwards, 255);
 }
 
 void loop() {
 
  //Forwards for 1 second
- analogWrite(WheelAForwards, 255);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 255);
- analogWrite(WheelBBackwards, 0);
+ forwards();
+ delay(1000);
+
+ //Backwards for 1 second
+ backwards();
  delay(1000);
  
- //Sharp Left for 1 second
- analogWrite(WheelAForwards, 0);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 255);
- analogWrite(WheelBBackwards, 0);
+//Sharp Left for 1 second
+ sharpLeft();
  delay(1000);
  
- //Sharp Right for 1 second
- analogWrite(WheelAForwards, 255);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 0);
- analogWrite(WheelBBackwards, 0);
+//Sharp Right for 1 second
+ sharpRight();
  delay(1000);
  
  
- //Slow Left for 1 second
- analogWrite(WheelAForwards, 200);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 255);
- analogWrite(WheelBBackwards, 0);
+//Slow Left for 1 second
+ slowLeft();
  delay(1000);
  
- //Slow Right for 1 second
- analogWrite(WheelAForwards, 255);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 200);
- analogWrite(WheelBBackwards, 0);
+//Slow Right for 1 second
+ slowRight();
  delay(1000);
 
  
- //Stop the car for 1 second
- analogWrite(WheelAForwards, 0);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 0);
- analogWrite(WheelBBackwards, 0);
+//Stop the car for 1 second
+ stopCar();
  delay(1000);
 
- 
- //ROTATE  for 1 second
- analogWrite(WheelAForwards, 255);
- analogWrite(WheelABackwards, 0);
- analogWrite(WheelBForwards, 0);
- analogWrite(WheelBBackwards, 255);
+
+//ROTATE  for 1 second
+ rotate();
  delay(1000);
  
 }
