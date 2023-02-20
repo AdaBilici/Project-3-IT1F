@@ -2,12 +2,12 @@
 
 // ================= PINS ====================
 // wheel movement and sensors
-const int wheelAForeward = 10;
-const int wheelABackward = 13;
-const int wheelBBackward = 12;
-const int wheelBForeward = 11;
-const int wheelBSensor = 5;
-const int wheelASensor = 7;
+const int wheelAForeward = 3; //used to be 10
+const int wheelABackward = 13; //forget
+const int wheelBBackward = 12; //forget
+const int wheelBForeward = 5; //used to be 11
+const int wheelBSensor = 5; //forget
+const int wheelASensor = 7; //forget
 
 // echo sensor
 const int distanceTrig = 8;
@@ -72,15 +72,18 @@ pinMode(Lled, OUTPUT);
 Serial.begin(9600);
 
 // initial variables
-currentSpeedPercent = 30;
+currentSpeedPercent = 70;
 }
 
 // ================= LOOP ====================
 
 void loop() {
-  Serial.println(getTurnCoefficient());
+  //Serial.println(getSensorBoolValuesString());
+  //Serial.println(getTurnCoefficient());
   forewardTurn(getTurnCoefficient());
-  delay(100);
+  //simpleForeward(currentSpeedPercent);
+
+  delay(500);
 }
 
 // ================= SENSORS ====================
@@ -118,9 +121,20 @@ int getTurnCoefficient(){
       coefficient += lineSensorValues[i];
     }
   }
-  coefficient = coefficient / lineSensorBoolValues[0] * 100; // turn coefficient into percent
+  coefficient = map(coefficient, lineSensorValues[0], -lineSensorValues[0], -100, 100); // actually working equivilant to: coefficient/
   lastTurnCoefficient = coefficient;
+  
   return coefficient;
+}
+
+String getSensorBoolValuesString(){
+  String msg = "";
+  for (int i = 0; i < lineSensorsLength; i++){
+    msg += "[";
+    msg += lineSensorBoolValues[i];
+    msg += "],";
+  }
+  return msg;
 }
 
 // ================= MOVEMENT ====================
@@ -135,10 +149,21 @@ void simpleForeward(int speed){
 
 // turns the robot by turnpercent (from -100 to 100) while still moving forewards
 void forewardTurn(int turnPercent){
-    if (turnPercent < minTurnPower){turnPercent = minTurnPower;};
     int modTurnPercent = 100 - abs(turnPercent); // ie. turns -30 into 70
+    if (modTurnPercent < minTurnPower){modTurnPercent = minTurnPower; Serial.println("worked");};
+    Serial.println(modTurnPercent);
     int turnWheelSpeed = scaleFromPercent(currentSpeedPercent / (100 / modTurnPercent)); // divides current speed by modified turnPercent fraction (50/(100/50) = 25)
     int forWheelSpeed = scaleFromPercent(currentSpeedPercent);
+    
+    Serial.println(100/ modTurnPercent);
+    Serial.println("---");
+    
+    Serial.println(30 / (100 / modTurnPercent));
+    Serial.println(turnWheelSpeed);
+    Serial.println(forWheelSpeed);
+
+    analogWrite(wheelABackward, 0);
+    analogWrite(wheelBBackward, 0);
     
   if (turnPercent < 0){
     analogWrite(wheelAForeward, turnWheelSpeed);
@@ -162,5 +187,5 @@ void grab(int degrees = 0){
 
 // calculates an analogue pin value based on percentage given
 int scaleFromPercent(float percent){
-  return ceil(percent/100*255);
+  return map(percent, 0, 100, 0, 255);
 }
