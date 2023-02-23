@@ -2,12 +2,12 @@
 
 // ================= PINS ====================
 // wheel movement and sensors
-const int wheelAForeward = 3; //used to be 10
-const int wheelABackward = 13; //forget
-const int wheelBBackward = 12; //forget
-const int wheelBForeward = 5; //used to be 11
-const int wheelBSensor = 5; //forget
-const int wheelASensor = 7; //forget
+const int wheelLeftForward = 3; //used to be 10
+const int wheelLeftBackward = 13; //forget
+const int wheelRightBackward = 12; //forget
+const int wheelRightForward = 5; //used to be 11
+const int wheelRightSensor = 5; //forget
+const int wheelLeftSensor = 7; //forget
 
 // echo sensor
 const int distanceTrig = 8;
@@ -46,14 +46,14 @@ int currentSpeedPercent;
 
 void setup() {
 // wheel movement
-pinMode(wheelABackward, OUTPUT);
-pinMode(wheelAForeward, OUTPUT);
-pinMode(wheelBBackward, OUTPUT);
-pinMode(wheelBForeward, OUTPUT);
+pinMode(wheelLeftBackward, OUTPUT);
+pinMode(wheelLeftForward, OUTPUT);
+pinMode(wheelRightBackward, OUTPUT);
+pinMode(wheelRightForward, OUTPUT);
 
 //sensors
-pinMode(wheelASensor, INPUT);
-pinMode(wheelBSensor, INPUT);
+pinMode(wheelLeftSensor, INPUT);
+pinMode(wheelRightSensor, INPUT);
 pinMode(distanceTrig, OUTPUT);
 pinMode(distanceEcho, INPUT);
 
@@ -78,8 +78,8 @@ currentSpeedPercent = 70;
 // ================= LOOP ====================
 
 void loop() {
-  //Serial.println(getSensorBoolValuesString());
-  //Serial.println(getTurnCoefficient());
+  Serial.println(getSensorBoolValuesString());
+  Serial.println(getTurnCoefficient());
   forewardTurn(getTurnCoefficient());
   //simpleForeward(currentSpeedPercent);
 
@@ -143,35 +143,27 @@ void simpleForeward(int speed){
   currentSpeedPercent = speed; 
   speed = scaleFromPercent(speed);
   
-  analogWrite(wheelAForeward, speed);
-  analogWrite(wheelBForeward, speed);
+  analogWrite(wheelLeftForward, speed);
+  analogWrite(wheelRightForward, speed);
 }
 
 // turns the robot by turnpercent (from -100 to 100) while still moving forewards
 void forewardTurn(int turnPercent){
     int modTurnPercent = 100 - abs(turnPercent); // ie. turns -30 into 70
-    if (modTurnPercent < minTurnPower){modTurnPercent = minTurnPower; Serial.println("worked");};
-    Serial.println(modTurnPercent);
+    if (modTurnPercent < minTurnPower){modTurnPercent = minTurnPower;};
     int turnWheelSpeed = scaleFromPercent(currentSpeedPercent / (100 / modTurnPercent)); // divides current speed by modified turnPercent fraction (50/(100/50) = 25)
     int forWheelSpeed = scaleFromPercent(currentSpeedPercent);
-    
-    Serial.println(100/ modTurnPercent);
-    Serial.println("---");
-    
-    Serial.println(30 / (100 / modTurnPercent));
-    Serial.println(turnWheelSpeed);
-    Serial.println(forWheelSpeed);
 
-    analogWrite(wheelABackward, 0);
-    analogWrite(wheelBBackward, 0);
+    analogWrite(wheelLeftBackward, 0);
+    analogWrite(wheelRightBackward, 0);
     
   if (turnPercent < 0){
-    analogWrite(wheelAForeward, turnWheelSpeed);
-    analogWrite(wheelBForeward, forWheelSpeed);
+    analogWrite(wheelLeftForward, turnWheelSpeed);
+    analogWrite(wheelRightForward, forWheelSpeed);
   }
   else if (turnPercent > 0){
-    analogWrite(wheelAForeward, forWheelSpeed);
-    analogWrite(wheelBForeward, turnWheelSpeed);
+    analogWrite(wheelLeftForward, forWheelSpeed);
+    analogWrite(wheelRightForward, turnWheelSpeed);
   }
   else{
     simpleForeward(currentSpeedPercent);
@@ -181,6 +173,72 @@ void forewardTurn(int turnPercent){
 // grab an object using a grabber, or move the grabber to the specified degrees using the optional argument
 void grab(int degrees = 0){
   gripper.write(degrees);  
+}
+
+
+// =========== SIMPLE FUNCTIONS ====================================
+void forwards()
+{
+ analogWrite(wheelLeftForward, 255);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 255);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void backwards()
+{
+ analogWrite(wheelLeftForward, 0);
+ analogWrite(wheelLeftBackward, 255);
+ analogWrite(wheelRightForward, 0);
+ analogWrite(wheelRightBackward, 255);
+}
+
+void sharpLeft()
+{
+ analogWrite(wheelLeftForward, 0);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 255);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void sharpRight()
+{
+ analogWrite(wheelLeftForward, 255);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 0);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void slowLeft()
+{
+ analogWrite(wheelLeftForward, 200);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 255);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void slowRight()
+{
+ analogWrite(wheelLeftForward, 255);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 200);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void stopCar()
+{
+ analogWrite(wheelLeftForward, 0);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 0);
+ analogWrite(wheelRightBackward, 0);
+}
+
+void rotate()
+{
+ analogWrite(wheelLeftForward, 255);
+ analogWrite(wheelLeftBackward, 0);
+ analogWrite(wheelRightForward, 0);
+ analogWrite(wheelRightBackward, 255);
 }
 
 // ================= CALCULATIONS ====================
