@@ -1,3 +1,4 @@
+#include <QTRSensors.h>
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
 #include <Servo.h>
@@ -22,10 +23,10 @@ const int BT_T=6;
 SoftwareSerial BT_module(BT_R,BT_T);
 
 //motor pins
-const int  MOTOR_A1=A0;
-const int MOTOR_A2=A1;  
-const int MOTOR_B1=A2;
-const int MOTOR_B2=A3;
+const int  MOTOR_A1=13;
+const int MOTOR_A2=12;  
+const int MOTOR_B1=11;
+const int MOTOR_B2=4;
 
 //buttons pins
 
@@ -53,6 +54,12 @@ const uint32_t BLUE=leds.Color(0,0,255);
 const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
 
+//Line sensor
+QTRSensors lineSensor;
+
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
+
 //Functions
 
 void moveForward(int power=255)
@@ -60,8 +67,8 @@ void moveForward(int power=255)
    leds.clear();
    leds.fill(WHITE,2,2);
    leds.show();
-  analogWrite(MOTOR_A1,power);
-  analogWrite(MOTOR_B1,power);
+  digitalWrite(MOTOR_A1,power);
+  digitalWrite(MOTOR_B1,power);
 }
 
 void moveBackwards(int power=255)
@@ -69,8 +76,8 @@ void moveBackwards(int power=255)
    leds.clear();
    leds.fill(RED,0,2);
    leds.show();
-  analogWrite(MOTOR_A2,power);
-  analogWrite(MOTOR_B2,power);
+  digitalWrite(MOTOR_A2,power);
+  digitalWrite(MOTOR_B2,power);
 }
 
 //SETUP 
@@ -87,6 +94,10 @@ void setup() {
   pinMode(BUTTON1,INPUT);
   pinMode(BUTTON2,INPUT);
   gripper.attach(gripper_pin);
+  lineSensor.setTypeRC();
+  lineSensor.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
+  lineSensor.setEmitterPin(2);
+  Serial.begin(9600);
 }
 
 // the loop function runs over and over again forever
@@ -145,6 +156,24 @@ void loop() {
  leds.fill(START,0,4);
   leds.show();
 }
+
+//Line sensor
+ lineSensor.read(sensorValues);
+  
+  for (uint8_t i = 0; i < SensorCount; i++) {
+    Serial.print(sensorValues[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
+
+  if(analogRead(sensorValues[i]) == 1){
+    //stop
+    //open gripper and park
+  }
+  elseif (analogRead(sensorValues[i]) == 0){
+    moveForward;
+  }
+
 //Functions
 void setup_motor_pins()
 {
@@ -154,5 +183,5 @@ void setup_motor_pins()
   pinMode(MOTOR_B2,OUTPUT);
 } 
     // Clears the trigPin
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
+  //digitalWrite(trigPin, LOW);
+  //delayMicroseconds(2);
