@@ -78,12 +78,9 @@ currentSpeedPercent = 70;
 // ================= LOOP ====================
 
 void loop() {
-  //Serial.println(getSensorBoolValuesString());
   //Serial.println(getTurnCoefficient());
   forewardTurn(getTurnCoefficient());
   //simpleForeward(currentSpeedPercent);
-
-  delay(500);
 }
 
 // ================= SENSORS ====================
@@ -151,16 +148,9 @@ void simpleForeward(int speed){
 void forewardTurn(int turnPercent){
     int modTurnPercent = 100 - abs(turnPercent); // ie. turns -30 into 70
     if (modTurnPercent < minTurnPower){modTurnPercent = minTurnPower; Serial.println("worked");};
-    Serial.println(modTurnPercent);
     int turnWheelSpeed = scaleFromPercent(currentSpeedPercent / (100 / modTurnPercent)); // divides current speed by modified turnPercent fraction (50/(100/50) = 25)
     int forWheelSpeed = scaleFromPercent(currentSpeedPercent);
     
-    Serial.println(100/ modTurnPercent);
-    Serial.println("---");
-    
-    Serial.println(30 / (100 / modTurnPercent));
-    Serial.println(turnWheelSpeed);
-    Serial.println(forWheelSpeed);
 
     analogWrite(wheelABackward, 0);
     analogWrite(wheelBBackward, 0);
