@@ -1,4 +1,6 @@
+#include <Adafruit_NeoPixel.h>
 #include <Servo.h>
+
 
 // ================= PINS ====================
 // wheel movement and sensors
@@ -8,6 +10,16 @@ const int wheelBBackward = 12; //forget
 const int wheelBforward = 5; //used to be 11
 const int wheelBSensor = 5; //forget
 const int wheelASensor = 7; //forget
+const int PIXEL_PIN=2;
+const int PIXEL_NUMBER=4;
+
+// led pixels
+Adafruit_NeoPixel leds(PIXEL_NUMBER, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
+const uint32_t RED=leds.Color(255,0,0);
+const uint32_t YELLOW=leds.Color(255,150,0);
+const uint32_t BLUE=leds.Color(0,0,255);
+const uint32_t WHITE=leds.Color(255,255,255);
+const uint32_t START=leds.Color(0,0,0);
 
 // echo sensor
 const int distanceTrig = 8;
@@ -57,6 +69,14 @@ pinMode(wheelBSensor, INPUT);
 pinMode(distanceTrig, OUTPUT);
 pinMode(distanceEcho, INPUT);
 
+//Led
+pinMode(Lled, OUTPUT);
+leds.begin();
+leds.fill(RED,0,2);
+leds.fill(WHITE,2,0);
+leds.setBrightness(60);
+leds.show();
+
 // assign line sensor input type (pinMode(A0-A7, INPUT))
 for (int i = 0; i < lineSensorsLength; i++){
   pinMode(lineSensors[i], INPUT);
@@ -65,14 +85,12 @@ for (int i = 0; i < lineSensorsLength; i++){
 //gripper
 gripper.attach(gripperPin);
 
-//Led
-pinMode(Lled, OUTPUT);
-
 //serial
 Serial.begin(9600);
 
 // initial variables
 currentSpeedPercent = 100;
+
 }
 
 // ================= LOOP ====================
@@ -88,6 +106,9 @@ void loop() {
     forwardTurn(getTurnCoefficient());
   }
   //simpleforward(currentSpeedPercent);
+
+
+
 }
 
 // ================= SENSORS ====================
