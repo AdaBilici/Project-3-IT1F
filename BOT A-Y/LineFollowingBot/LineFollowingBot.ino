@@ -43,6 +43,11 @@ long duration, distance;
 int currentSpeedPercent;
 int blackZoneFrameCount;
 int objectDetectionCount;
+int maxObjectDetectionCount;
+boolean startDetectionToggle;
+int startDetectionCount; // counts lines at start sequence;
+int objectDetectionBuffer; // detects objects every x frames
+int objectDetectionBufferRate;
 int phase;
 
 // ================= SETUP ====================
@@ -72,7 +77,12 @@ pinMode(Lled, OUTPUT);
 //serial
 Serial.begin(9600);
 
+//buffer/timing/framerate related
+objectDetectionBufferRate = 400;
+maxObjectDetectionCount = 10;
+
 // initial variables
+startDetectionToggle = false;
 currentSpeedPercent = 100;
 phase = 0;
 }
@@ -82,29 +92,31 @@ phase = 0;
 // main loop
 void loop() {
   // if isn't in resting phase
-  if (phase != -1){
-    updateSensorBoolList();
-    updateBlackZoneFrameCount();
+  if(objectDetectionBuffer >= objectDetectionBufferRate){
+    Serial.println(objectDetectionCount);
+    objectDetectionBuffer = 0;
     updateObjectDetectionCount();
-  
-    // while in start zone
-    if (phase == 0){
-      startSequence();
-    }
-  
-    // while in actual course
-    else if (phase == 1){
-      lineFollowSequence();
-    }
-    else if (phase == 2){
-      endSequence();
-    }
-    else if (phase == 3){
-      avoidObjectSequence();
-    }
   }
   else{
-    delay(9999999999);
+    objectDetectionBuffer++;
+  }
+  updateSensorBoolList();
+  updateBlackZoneFrameCount();
+  
+  // while in start zone
+  if (phase == 0){
+    startSequence();
+  }
+  
+  // while in actual course
+  else if (phase == 1){
+    lineFollowSequence();
+  }
+  else if (phase == 2){
+    endSequence();
+  }
+  else if (phase == 3){
+    avoidObjectSequence();
   }
 }
 
@@ -112,31 +124,39 @@ void loop() {
 void startSequence(){
   grab(1);
   forwardTurn(0);
-  if (blackZoneFrameCount > 20){
+  Serial.println(startDetectionCount);
+  if (isBlackZoneFrame()){
+    if(startDetectionToggle){
+      startDetectionToggle=false;
+      startDetectionCount++; 
+    }
+  }
+  else{
+    startDetectionToggle = true;
+  }
+  if (startDetectionCount >= 4){
     grab(0);
-    simpleLeft();
+    complexLeft(700);
     forwardTurn(0);
     delay(500);
-    phase++;
+    phase = 1;
   }
 }
 
 void lineFollowSequence(){
-  Serial.println("line");
-  if(objectDetectionCount < maxObjectDetections){
-        phase = 3;
-      }
-      else if(getSensorAnomaly()){
-        //removeExtremeSensors();
-        forwardTurn(lastTurnCoefficient);
-      }
-      else{
-        forwardTurn(getTurnCoefficient());
-      }
-      if (blackZoneFrameCount > 50){
-        // end of course sequence
-        phase++;
-    }
+  if(objectDetectionCount >= maxObjectDetectionCount){
+    phase=3;
+  }
+  else if(getSensorAnomaly()){
+    forwardTurn(lastTurnCoefficient);
+  }
+  else{
+    forwardTurn(getTurnCoefficient());
+  }
+  if (blackZoneFrameCount > 50){
+    // end of course sequence
+    phase=2;
+  }
 }
 
 void avoidObjectSequence(){
@@ -146,7 +166,9 @@ void avoidObjectSequence(){
 void endSequence(){
   Serial.println("end");
   movementStop();
-  phase = -1;
+  while(true){
+    delay(99999999);
+  }
 }
 
 // ================= SENSORS ====================
@@ -198,7 +220,7 @@ void updateBlackZoneFrameCount(){
 }
 
 bool isBlackZoneFrame(){
-  for (int i = 0; i < lineSensorsLength; i++){
+  for (int i = 1; i < lineSensorsLength-1; i++){ //ignores first and last sensor
     if(!lineSensorBoolValues[i]){
       return false;
     }
@@ -271,6 +293,14 @@ void simpleLeft(){
   analogWrite(wheelAforward, 0);
   analogWrite(wheelBforward, 255);
   delay(800);
+}
+
+void complexLeft(int delayA){ // does a turn to the left
+  analogWrite(wheelABackward, 0);
+  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAforward, 0);
+  analogWrite(wheelBforward, 255);
+  delay(delayA);
 }
 
 // does 90 degree turn right
