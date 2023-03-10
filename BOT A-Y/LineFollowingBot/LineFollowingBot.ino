@@ -1,5 +1,5 @@
 #include <Servo.h>
-
+#include <Adafruit_NeoPixel.h>
 
 // ================= PINS ====================
 // wheel movement and sensors
@@ -7,6 +7,17 @@ const int wheelAforward = 3; //used to be 10
 const int wheelABackward = 0;
 const int wheelBBackward = 0;
 const int wheelBforward = 5; //used to be 11
+const int PIXEL_PIN=2;
+const int PIXEL_NUMBER=4;
+
+// led pixels
+Adafruit_NeoPixel leds(PIXEL_NUMBER, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
+const uint32_t RED=leds.Color(255,0,0);
+const uint32_t YELLOW=leds.Color(255,150,0);
+const uint32_t BLUE=leds.Color(0,0,255);
+const uint32_t WHITE=leds.Color(255,255,255);
+const uint32_t START=leds.Color(0,0,0);
+
 
 // echo sensor
 const int distanceTrig = 8;
@@ -64,16 +75,22 @@ pinMode(wheelBforward, OUTPUT);
 pinMode(distanceTrig, OUTPUT);
 pinMode(distanceEcho, INPUT);
 
-//Led
-pinMode(Lled, OUTPUT);
-
 // assign line sensor input type (pinMode(A0-A7, INPUT))
 for (int i = 0; i < lineSensorsLength; i++){
   pinMode(lineSensors[i], INPUT);
 }
 
+//Led
+pinMode(Lled, OUTPUT);
+leds.begin();
+leds.fill(RED,0,2);
+leds.fill(WHITE,2,0);
+leds.setBrightness(60);
+leds.show();
+
 //gripper
 gripper.attach(gripperPin);
+
 
 //serial
 Serial.begin(9600);
@@ -85,9 +102,7 @@ maxObjectDetectionCount = 10;
 // initial variables
 startDetectionToggle = false;
 currentSpeedPercent = 100;
-
 phase = 0;
-
 }
 
 // ================= LOOP ====================
@@ -121,7 +136,6 @@ void loop() {
   else if (phase == 3){
     avoidObjectSequence();
   }
-
 }
 
 // moves into the block and turns left
@@ -140,24 +154,22 @@ void startSequence(){
   }
   if (startDetectionCount >= 4){
     grab(0);
-    complexLeft(700);
+    delay(200);
+    simpleLeft();
     forwardTurn(0);
-    delay(500);
+    delay(300);
     phase = 1;
   }
 }
 
 void lineFollowSequence(){
-  if(objectDetectionCount >= maxObjectDetectionCount){
-    phase=3;
-  }
-  else if(getSensorAnomaly()){
+  if(getSensorAnomaly()){
     forwardTurn(lastTurnCoefficient);
   }
   else{
     forwardTurn(getTurnCoefficient());
   }
-  if (blackZoneFrameCount > 50){
+  if (blackZoneFrameCount > 100){
     // end of course sequence
     phase=2;
   }
