@@ -56,7 +56,6 @@ const uint32_t START=leds.Color(0,0,0);
 
 //Line sensor
 QTRSensors lineSensor;
-
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
@@ -97,6 +96,23 @@ void setup() {
   lineSensor.setTypeRC();
   lineSensor.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
   lineSensor.setEmitterPin(2);
+  //calibration
+  pinMode(13, OUTPUT);
+  for (uint16_t i = 0; i < 400; i++){
+    lineSensor.calibrate();
+  }
+  for (uint8_t i = 0; i < SensorCount; i++){
+    Serial.print(lineSensor.calibrationOn.minimum[i]);
+    Serial.print(' ');
+  }
+  Serial.println();
+  for(uint8_t i = 0; i < SensorCount; i++){
+    Serial.print(lineSensor.calibrationOn.maximum[i]);
+    Serial.print(' ');
+  }
+  Serial.println();
+  Serial.println();
+  delay(100);
   Serial.begin(9600);
 }
 
@@ -155,24 +171,27 @@ void loop() {
  gripper.write(0);
  leds.fill(START,0,4);
   leds.show();
-}
 
-//Line sensor
- lineSensor.read(sensorValues);
-  
-  for (uint8_t i = 0; i < SensorCount; i++) {
+ //Line sensor
+  //calibration
+  uint16_t position = lineSensor.readLineBlack(sensorValues);
+  for (uint8_t i = 0; i < SensorCount; i++){
     Serial.print(sensorValues[i]);
-    Serial.print('\t');
+    Serial.print('/t');
+  }
+  Serial.println(position);
+  delay(250);
+
+  //print values
+  lineSensor.read(sensorValues);
+  for (uint8_t i = 0; i < SensorCount; i++){
+    Serial.print(sensorValues[i]);
+    Serial.print('/t');
   }
   Serial.println();
 
-  if(analogRead(sensorValues[i]) == 1){
-    //stop
-    //open gripper and park
-  }
-  elseif (analogRead(sensorValues[i]) == 0){
-    moveForward;
-  }
+}
+
 
 //Functions
 void setup_motor_pins()
