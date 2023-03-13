@@ -22,8 +22,7 @@ const uint32_t START=leds.Color(0,0,0);
 // echo sensor
 const int distanceTrig = 8;
 const int distanceEcho = 9;
-const float objectDetectionDistance = 20;
-const int maxObjectDetections = 50;
+const float objectDetectionDistance = 30;
 
 //line sensors
 const int lineSensors[] = {A6, A5, A4, A3, A2, A0}; 
@@ -96,8 +95,9 @@ gripper.attach(gripperPin);
 Serial.begin(9600);
 
 //buffer/timing/framerate related
-objectDetectionBufferRate = 400;
-maxObjectDetectionCount = 10;
+//objectDetectionBufferRate = 400;
+objectDetectionBufferRate = 300;
+maxObjectDetectionCount = 2;
 
 // initial variables
 startDetectionToggle = false;
@@ -110,14 +110,7 @@ phase = 0;
 // main loop
 void loop() {
   // if isn't in resting phase
-  if(objectDetectionBuffer >= objectDetectionBufferRate){
-    Serial.println(objectDetectionCount);
-    objectDetectionBuffer = 0;
-    updateObjectDetectionCount();
-  }
-  else{
-    objectDetectionBuffer++;
-  }
+  
   updateSensorBoolList();
   updateBlackZoneFrameCount();
   
@@ -163,7 +156,16 @@ void startSequence(){
 }
 
 void lineFollowSequence(){
-  if(getSensorAnomaly()){
+  if(millis() >= objectDetectionBuffer){
+    objectDetectionBuffer = millis()+objectDetectionBufferRate;
+    updateObjectDetectionCount();
+  }
+
+  if(objectDetectionCount >= maxObjectDetectionCount){
+    avoidObjectSequence();
+    lastTurnCoefficient = 0;
+  }
+  else if(getSensorAnomaly()){
     forwardTurn(lastTurnCoefficient);
   }
   else{
@@ -176,7 +178,16 @@ void lineFollowSequence(){
 }
 
 void avoidObjectSequence(){
-  phase = 1;
+  forwardTurn(90);
+  delay(500);
+  forwardTurn(0);
+  delay(100);
+  forwardTurn(-90);
+  delay(500);
+  forwardTurn(0);
+  delay(400);
+  forwardTurn(-80);
+  delay(200);
 }
 
 void endSequence(){
