@@ -98,10 +98,10 @@ void stopRobot() {
 
 void rotateOnAxis()
 {
-  analogWrite(motorLeftBackwards,0);
-  analogWrite(motorLeftForward, 200);
-  analogWrite(motorRightForward, 0);
-  analogWrite(motorRightBackwards,200);
+  analogWrite(motorLeftBackwards,150);
+  analogWrite(motorLeftForward, 0);
+  analogWrite(motorRightForward, 150);
+  analogWrite(motorRightBackwards,0);
 }
 
 void CountA()
@@ -118,6 +118,28 @@ void CountB()
   countRight++;
   Serial.println(countRight);
   interrupts();
+}
+
+void getDistanceLeft()
+{
+  digitalWrite(trigPinLeft, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinLeft, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  durationLeft = pulseIn(echoPinLeft, HIGH);
+  // Calculating the distance
+  distanceLeft = durationLeft * 0.034 / 2; 
+}
+
+void getDistanceForward()
+{  
+  digitalWrite(trigPinFront, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinFront, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  durationFront = pulseIn(echoPinFront, HIGH);
+  // Calculating the distance
+  distanceFront = durationFront * 0.034 / 2;
 }
 //===[SETUP ]============================
 
@@ -143,30 +165,12 @@ void setup() {
 //===[ LOOP ]============================
 
 void loop() {
-  //distance 
-  // Sets the trigPin on HIGH state for 10 micro secondssensor
-  
-  digitalWrite(trigPinLeft, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinLeft, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  durationLeft = pulseIn(echoPinLeft, HIGH);
-  // Calculating the distance
-  distanceLeft = durationLeft * 0.034 / 2;
- 
-
-  digitalWrite(trigPinFront, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPinFront, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  durationFront = pulseIn(echoPinFront, HIGH);
-  // Calculating the distance
-  distanceFront = durationFront * 0.034 / 2;
+  getDistanceLeft();
+  getDistanceForward();
   countLeft=0;
   countRight=0;
-  
-  while(countLeft<80&&countRight<80)
-  {moveForward(255);
+  while(countLeft<72&&countRight<72)
+  {rotateOnAxis();
    CountA();
    CountB();
   }
