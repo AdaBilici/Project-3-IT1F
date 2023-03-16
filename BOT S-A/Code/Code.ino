@@ -1,9 +1,9 @@
 #include <QTRSensors.h>
 #include <Adafruit_NeoPixel.h>
 #include <Servo.h>
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
-#include <Servo.h>
+//#include <Servo.h>
 
 //===[ Time variables ]=============================
 
@@ -61,11 +61,10 @@ const uint32_t BLUE=leds.Color(0,0,255);
 const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
 
-//Line sensor
-//QTRSensors lineSensor;
-
-//const uint8_t SensorCount = 8;
-//uint16_t sensorValues[SensorCount];
+//===[ Line Sensor ]================================
+QTRSensors lineSensor;
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
 
 //===[ Functions ]=================================
 
@@ -141,6 +140,15 @@ void getDistanceForward()
   // Calculating the distance
   distanceFront = durationFront * 0.034 / 2;
 }
+void setCalibration(int power = 170){
+  digitalWrite(motorRightBackwards, power);
+  digitalWrite(motorLeftForward,215); 
+  for(uint8_t i = 0; i < 35; i++){
+    lineSensor.calibrate();
+    Serial.print("Calibration: ");
+    Serial.println(i);
+  }
+}
 //===[SETUP ]============================
 
 void setup() {
@@ -158,6 +166,10 @@ void setup() {
   leds.fill(BLUE,0,4);
   leds.show();
   setup_motor_pins();
+  lineSensor.setTypeAnalog();
+  lineSensor.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
+  //lineSensor.setEmitterPin(2);
+  setCalibration();
 
 //  gripper.attach(gripper_pin);
 }
@@ -165,7 +177,7 @@ void setup() {
 //===[ LOOP ]============================
 
 void loop() {
-  getDistanceLeft();
+  /*getDistanceLeft();
   getDistanceForward();
   countLeft=0;
   countRight=0;
@@ -175,7 +187,7 @@ void loop() {
    CountB();
   }
   stopRobot();
-  delay(5000);
+  delay(5000);*/
 /*
 if(distanceFront > 10 && distanceLeft < 10)
 {
@@ -191,22 +203,15 @@ else {
     leds.show();
   }
 */
-}
-
 //Line sensor
-/*
- lineSensor.read(sensorValues);
+  uint16_t position = lineSensor.readLineBlack(sensorValues);
   
   for (uint8_t i = 0; i < SensorCount; i++) {
     Serial.print(sensorValues[i]);
     Serial.print('\t');
   }
-  Serial.println();
 
-  if(analogRead(sensorValues[i]) == 1){
-    //stop
-    //open gripper and park
+  if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600 && sensorValues[3] > 600 && sensorValues[4] > 600 && sensorValues[5] > 600 && sensorValues[6] && sensorValues[7] > 600){
+    stopRobot();
   }
-  elseif (analogRead(sensorValues[i]) == 0){
-    moveForward;
-*/
+}
