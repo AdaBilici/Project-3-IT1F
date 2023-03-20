@@ -67,16 +67,10 @@ const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
 
 //Line sensor
-<<<<<<< HEAD
-QTRSensors lineSensor;
-const uint8_t SensorCount = 8;
-uint16_t sensorValues[SensorCount];
-=======
 //QTRSensors lineSensor;
 
 //const uint8_t SensorCount = 8;
 //uint16_t sensorValues[SensorCount];
->>>>>>> 259b34210e8f438a1ffe9a2f5a76812ef939a197
 
 //===[ Functions ]=================================
 
@@ -112,7 +106,6 @@ void setup() {
   leds.fill(BLUE,0,4);
   leds.show();
   setup_motor_pins();
-<<<<<<< HEAD
   pinMode(BUTTON1,INPUT);
   pinMode(BUTTON2,INPUT);
   gripper.attach(gripper_pin);
@@ -137,10 +130,9 @@ void setup() {
   Serial.println();
   delay(100);
   Serial.begin(9600);
-=======
 
 //  gripper.attach(gripper_pin);
->>>>>>> 259b34210e8f438a1ffe9a2f5a76812ef939a197
+
 }
 
 int value=0;
@@ -181,7 +173,6 @@ else {
     leds.fill(RED, 0, 4);
     leds.show();
   }
-<<<<<<< HEAD
   else
   {
     analogWrite(MOTOR_A1,0);
@@ -215,15 +206,6 @@ else {
   //calibration
   uint16_t position = lineSensor.readLineBlack(sensorValues);
   for (uint8_t i = 0; i < SensorCount; i++){
-=======
-}
-
-//Line sensor
-/*
- lineSensor.read(sensorValues);
-  
-  for (uint8_t i = 0; i < SensorCount; i++) {
->>>>>>> 259b34210e8f438a1ffe9a2f5a76812ef939a197
     Serial.print(sensorValues[i]);
     Serial.print('/t');
   }
@@ -238,7 +220,6 @@ else {
   }
   Serial.println();
 
-<<<<<<< HEAD
 }
 
 
@@ -253,12 +234,3 @@ void setup_motor_pins()
     // Clears the trigPin
   //digitalWrite(trigPin, LOW);
   //delayMicroseconds(2);
-=======
-  if(analogRead(sensorValues[i]) == 1){
-    //stop
-    //open gripper and park
-  }
-  elseif (analogRead(sensorValues[i]) == 0){
-    moveForward;
-*/
->>>>>>> 259b34210e8f438a1ffe9a2f5a76812ef939a197
