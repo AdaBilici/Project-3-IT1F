@@ -41,7 +41,7 @@ const int MOTOR_B2=4;
 
 //===[ Button Pins + States ]======================
 
-/*
+
 const int BUTTON1=2;
 const int BUTTON2=3;
 const int BUTTON3=4;
@@ -49,7 +49,7 @@ const int BUTTON3=4;
 int buttonState1=0;
 int buttonState2=0;
 int buttonState3=0;
-*/
+
 
 //===[ Pixels ]====================================
 
@@ -67,10 +67,10 @@ const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
 
 //Line sensor
-//QTRSensors lineSensor;
+QTRSensors lineSensor;
 
-//const uint8_t SensorCount = 8;
-//uint16_t sensorValues[SensorCount];
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
 
 //===[ Functions ]=================================
 
@@ -173,11 +173,6 @@ else {
     leds.fill(RED, 0, 4);
     leds.show();
   }
-  else
-  {
-    analogWrite(MOTOR_A1,0);
-    analogWrite(MOTOR_B1,0);
-    }
 
 
   if (buttonState2==LOW)
@@ -188,7 +183,7 @@ else {
     analogWrite(MOTOR_A2,0);
     analogWrite(MOTOR_B2,0);
     }
-*/
+
  if(buttonState1==LOW)
  {value++;
  gripper.write(180);
@@ -224,13 +219,6 @@ else {
 
 
 //Functions
-void setup_motor_pins()
-{
-  pinMode(MOTOR_A1,OUTPUT);
-  pinMode(MOTOR_A2,OUTPUT);
-  pinMode(MOTOR_B1,OUTPUT);
-  pinMode(MOTOR_B2,OUTPUT);
-} 
     // Clears the trigPin
   //digitalWrite(trigPin, LOW);
   //delayMicroseconds(2);
