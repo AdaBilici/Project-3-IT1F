@@ -1,43 +1,39 @@
-//=============[LIBRARIES]=============
-
 #include <Adafruit_NeoPixel.h> // https://github.com/adafruit/Adafruit_NeoPixel
-#include <Servo.h> // https://github.com/arduino-libraries/Servo
+#include <Servo.h> // https://github.com/arduino-libraries/Servo/
 #include <QTRSensors.h> // https://github.com/pololu/qtr-sensors-arduino
   
-//=============[SET PINS]=============
-
+//=============[ Motor pins ]=============
 const int leftBack = 11; // Left wheel back
 const int leftForward = 6; // Left wheel forward
 const int rightForward = 3; // Right wheel forward
 const int rightBack = 5; // Right wheel back
 
+//=============[ Rotation sensors ]=============
+const int motor_R1 = 8;
+const int motor_R2 = 2;
+int countLeft = 0;
+int countRight = 0;
+
+//=============[ Gripper ]=============
+const int gripper = 7;
+Servo servoMotor;
+int pos = 40;
+
+//=============[ Neo pixels ]=============
 const int PIN = 4;
 const int numbPixels = 4;
 
-const int firstButtonPin = 12; // Button1 pin
-const int secondButtonPin = 8; // Button2 pin
-const int gripper = 7; // Gripper pin
-Servo servoMotor; // Declaring servo object
-  
-//=============[DECLARE VARIABLES]=============
-
-int pos = 40;
-int buttonStateOne = 0;
-int buttonStateTwo = 0;
-int val;
-
+//=============[ Line sensor ]=============
 QTRSensors qtr;
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
+unsigned long time;
 
-//=============[SETUP]=============
+//=============[SETUP]====================================================
 
 void setup() {
-  // QTRsensor setup -----------------------------------------------------------------
-  
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
-  Serial.begin(9600);
   
   delay(500);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -62,14 +58,11 @@ void setup() {
       stopCar();
     } else if (i == 99) {
       closeGripper();
-      delay(100);
-      moveForward();
     }
     qtr.calibrate();
   }
   digitalWrite(LED_BUILTIN, LOW);
 
-  Serial.begin(9600);
   for (uint8_t i = 0; i < SensorCount; i++)
   {
     Serial.print(qtr.calibrationOn.minimum[i]);
@@ -77,7 +70,6 @@ void setup() {
   }
   Serial.println();
   
-  // print the calibration maximum values measured when emitters were on
   for (uint8_t i = 0; i < SensorCount; i++)
   {
     Serial.print(qtr.calibrationOn.maximum[i]);
@@ -89,47 +81,77 @@ void setup() {
   
   // Gripper setup
   servoMotor.attach(7);
-  pinMode(firstButtonPin, INPUT);
-  pinMode(secondButtonPin, INPUT);
+  
+  pinMode(motor_R1, INPUT_PULLUP);
+  pinMode(motor_R2, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(motor_R1),countA,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(motor_R2),countB,CHANGE);
 
-  // Wheels setup
   pinMode(leftBack, OUTPUT);
   pinMode(leftForward, OUTPUT);
   pinMode(rightForward, OUTPUT);
   pinMode(rightBack, OUTPUT);
+  Serial.begin(9600);
+
+  cornerLeft();
+  wait(800);
 }
 
-//=============[LOOP]=============
+//=============[LOOP]====================================================
 
 void loop() {
- sensorRead();
-
- if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-   if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600) {
-     cornerRight();
-     delay(800);
-   } else if ((sensorValues[2] > 600 || sensorValues[3] > 600 || sensorValues[4] > 600) && (sensorValues[1] > 600 || sensorValues[2] > 600 || sensorValues[3] > 600)) {
-     moveForward();
-   } else {
-     moveForward();
-   }
- } else if (sensorValues[0] > 600 || sensorValues[1] > 600 || sensorValues[2] > 600) {
-   turnRight();
- } else if (sensorValues[5] > 600 || sensorValues[6] > 600 || sensorValues[7] > 600) {
-   turnLeft();
- } else if (sensorValues < 600) {
-   rotate();
- }
+  sensorRead();
+  countLeft = 0;
+  countRight = 0;
+  
+  if (sensorValues[3] > 600 || sensorValues[4] > 600) {
+    if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600) {
+      stopCar();
+      wait(300);
+      moveForward();
+      wait(175);
+      stopCar();
+      wait(300);
+      while(countRight < 110 && countLeft < 110) {
+        cornerRight();
+        countA();
+        countB();
+      }
+    } else if (sensorValues[7] > 600 && sensorValues[6] > 600 && sensorValues[5] > 600) {
+      stopCar();
+      wait(300);
+      if (sensorValues[3] > 600 || sensorValues[4] > 600) {
+        moveForward();
+        wait(350);
+      }
+    } else if ((sensorValues[2] > 600 || sensorValues[3] > 600 || sensorValues[4] > 600) && (sensorValues[1]< 600 || sensorValues[2] < 600 || sensorValues[3]<600)) {
+      moveForward();
+    } else {
+      moveForward();
+    }
+  } else if (sensorValues[0] > 600 || sensorValues[1] > 600 || sensorValues[2] > 600) {
+    turnRight();
+  } else if (sensorValues[5] > 600 || sensorValues[6] > 600 || sensorValues[7] > 600) {
+    turnLeft();
+  } else if (sensorValues < 600) {
+    stopCar();
+    wait(800);
+    while(countLeft < 105 && countRight < 105) {
+      rotate();
+      countA();
+      countB();
+    }
+  }
 }
 
 /**************[END OF PROGRAM]**************/
 
-//=============[Functions]=============
+//=============[Functions]===============================================
 
 void moveForward() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 220);
-  analogWrite(rightForward, 200);
+  analogWrite(leftForward, 230);
+  analogWrite(rightForward, 210);
   analogWrite(rightBack,0);
 }
 
@@ -149,41 +171,61 @@ void moveBackwards() {
 
 void turnLeft() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 100);
-  analogWrite(rightForward, 230);
+  analogWrite(leftForward, 110);
+  analogWrite(rightForward, 210);
   analogWrite(rightBack,0);
 }
 
 void turnRight() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 230);
-  analogWrite(rightForward, 80);
+  analogWrite(leftForward, 200);
+  analogWrite(rightForward, 100);
   analogWrite(rightBack,0);
 }
 
 void rotate() {
   analogWrite(leftBack,180);
   analogWrite(leftForward, 0);
-  analogWrite(rightForward,150);
+  analogWrite(rightForward,155);
   analogWrite(rightBack,0);
 }
 
 void cornerLeft(){
   analogWrite(leftBack,0); //Left wheel backward
   analogWrite(leftForward,0);//Left wheel forward
-  analogWrite(rightForward,210); //Right wheel forward
+  analogWrite(rightForward,200); //Right wheel forward
   analogWrite(rightBack,0); //Right wheel backward
 }
 
 void cornerRight(){
   analogWrite(leftBack,0); //Left wheel backward
-  analogWrite(leftForward,230);//Left wheel forward
+  analogWrite(leftForward,210);//Left wheel forward
   analogWrite(rightForward,0); //Right wheel forward
   analogWrite(rightBack,0); //Right wheel backward
-} 
+}
+
+void wait(int waitingTime) {
+  time = millis();
+  while(millis() < time + waitingTime){
+  }
+}
+
+void countA() {
+  noInterrupts();
+  countLeft++;
+  Serial.println(countLeft);
+  interrupts();
+}
+
+void countB() {
+  noInterrupts();
+  countRight++;
+  Serial.println(countRight);
+  interrupts();
+}
 
 void closeGripper() {
-  servoMotor.write(35);  
+  servoMotor.write(45);  
 }
 
 void openGripper() {
@@ -199,6 +241,4 @@ void sensorRead() {
     Serial.print('\t');
   }
   Serial.println(position);
-
-  delay(250);
 }
