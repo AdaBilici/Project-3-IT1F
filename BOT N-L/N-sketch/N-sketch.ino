@@ -82,10 +82,10 @@ void setup() {
   // Gripper setup
   servoMotor.attach(7);
   
-  pinMode(motor_R1, INPUT_PULLUP);
-  pinMode(motor_R2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(motor_R1),countA,CHANGE);
-  attachInterrupt(digitalPinToInterrupt(motor_R2),countB,CHANGE);
+  pinMode(motor_R1, INPUT);
+  pinMode(motor_R2, INPUT);
+  attachInterrupt(digitalPinToInterrupt(motor_R1),countB,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(motor_R2),countA,CHANGE);
 
   pinMode(leftBack, OUTPUT);
   pinMode(leftForward, OUTPUT);
@@ -109,10 +109,8 @@ void loop() {
       stopCar();
       wait(300);
       moveForward();
-      wait(175);
-      stopCar();
-      wait(300);
-      while(countRight < 110 && countLeft < 110) {
+      wait(150);
+      while(countRight < 115 && countLeft < 115) {
         cornerRight();
         countA();
         countB();
@@ -135,12 +133,18 @@ void loop() {
     turnLeft();
   } else if (sensorValues < 600) {
     stopCar();
-    wait(800);
-    while(countLeft < 105 && countRight < 105) {
+    wait(300);
+    while(countLeft < 95 && countRight < 95) {
       rotate();
       countA();
       countB();
     }
+    stopCar();
+    wait(200);
+  } else if (sensorValues[3] > 600 || sensorValues[4] > 600) {
+    stopCar();
+    wait(500);
+    moveForward();
   }
 }
 
@@ -184,9 +188,9 @@ void turnRight() {
 }
 
 void rotate() {
-  analogWrite(leftBack,180);
+  analogWrite(leftBack,200);
   analogWrite(leftForward, 0);
-  analogWrite(rightForward,155);
+  analogWrite(rightForward,170);
   analogWrite(rightBack,0);
 }
 
