@@ -1,9 +1,6 @@
-#include <QTRSensors.h>
 #include <Adafruit_NeoPixel.h>
-#include <Servo.h>
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
-#include <Servo.h>
 
 //===[ Time variables ]=============================
 
@@ -22,16 +19,6 @@ int distanceLeft;
 const int trigPinLeft = 5;
 const int echoPinLeft = 6;
 
-//===[ Gripper ]====================================
-
-const int gripper_pin=4;
-Servo gripper;
-
-//bluetooth
-
-const int BT_R=5;
-const int BT_T=6;
-SoftwareSerial BT_module(BT_R,BT_T);
 
 //===[ Motor pins ]======================
 
@@ -60,13 +47,6 @@ const uint32_t YELLOW=leds.Color(255,150,0);
 const uint32_t BLUE=leds.Color(0,0,255);
 const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
-
-//Line sensor
-//QTRSensors lineSensor;
-
-//const uint8_t SensorCount = 8;
-//uint16_t sensorValues[SensorCount];
-
 //===[ Functions ]=================================
 
 void setup_motor_pins()
@@ -76,10 +56,11 @@ void setup_motor_pins()
   pinMode(motorLeftBackwards,OUTPUT);
   pinMode(motorLeftForward,OUTPUT);
 }
-void moveForward(int power=255)
+void moveForward(int power)
 {
-
-  digitalWrite(motorLeftForward,215);
+  leds.fill(BLUE,0,4);
+  leds.show();
+  digitalWrite(motorLeftForward,power);
   digitalWrite(motorRightForward,power);
 }
 
@@ -98,17 +79,46 @@ void stopRobot() {
 
 void rotateOnAxis()
 {
+  leds.fill(RED, 0, 4);
+  leds.show();
   analogWrite(motorLeftBackwards,150);
   analogWrite(motorLeftForward, 0);
   analogWrite(motorRightForward, 150);
   analogWrite(motorRightBackwards,0);
 }
-
+void rotateCounterAxis()
+{
+  analogWrite(motorLeftBackwards,0);
+  analogWrite(motorLeftForward, 150);
+  analogWrite(motorRightForward, 0);
+  analogWrite(motorRightBackwards,150);
+}
+void rotatePulses(int nrOfPulses)
+{
+  stopRobot();
+  countLeft=0;
+  countRight=0;
+  getDistanceLeft();
+  while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10)
+    {
+      rotateOnAxis();
+     // showNrOfPulse();
+      
+      getDistanceLeft();
+    }
+  stopRobot();
+}
+void showNrOfPulse()
+{
+ Serial.print(countLeft);
+ Serial.print(" ");
+ Serial.print(countRight);
+ Serial.println();
+}
 void CountA()
 {
   noInterrupts();
   countLeft++;
-  Serial.println(countLeft);
   interrupts();
 }
 
@@ -116,7 +126,6 @@ void CountB()
 {
   noInterrupts();
   countRight++;
-  Serial.println(countRight);
   interrupts();
 }
 
@@ -129,9 +138,10 @@ void getDistanceLeft()
   durationLeft = pulseIn(echoPinLeft, HIGH);
   // Calculating the distance
   distanceLeft = durationLeft * 0.034 / 2; 
+  Serial.println(distanceLeft);
 }
 
-void getDistanceForward()
+void getDistanceFront()
 {  
   digitalWrite(trigPinFront, HIGH);
   delayMicroseconds(10);
@@ -140,6 +150,7 @@ void getDistanceForward()
   durationFront = pulseIn(echoPinFront, HIGH);
   // Calculating the distance
   distanceFront = durationFront * 0.034 / 2;
+ 
 }
 //===[SETUP ]============================
 
@@ -153,60 +164,28 @@ void setup() {
   pinMode(trigPinLeft, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPinLeft, INPUT); // Sets the echoPin as an Input
   Serial.begin(9600);
-  BT_module.begin(9600);
   leds.begin();
   leds.fill(BLUE,0,4);
   leds.show();
   setup_motor_pins();
-
-//  gripper.attach(gripper_pin);
 }
 
 //===[ LOOP ]============================
 
-void loop() {
-  getDistanceLeft();
-  getDistanceForward();
-  countLeft=0;
-  countRight=0;
-  while(countLeft<72&&countRight<72)
-  {rotateOnAxis();
-   CountA();
-   CountB();
-  }
-  stopRobot();
-  delay(5000);
-/*
-if(distanceFront > 10 && distanceLeft < 10)
+void loop()
 {
- leds.fill(BLUE,0,4);
- leds.show();
- rotateOnAxis();
- delay(250);
- stopRobot();
-}
-else {
- stopRobot();
-    leds.fill(RED, 0, 4);
-    leds.show();
+ 
+ getDistanceLeft();
+ getDistanceFront();
+ if (distanceLeft<=15)
+ {
+  moveForward(200);
+ }
+ else
+  {
+    rotatePulses(72);
   }
-*/
+ 
 }
 
-//Line sensor
-/*
- lineSensor.read(sensorValues);
   
-  for (uint8_t i = 0; i < SensorCount; i++) {
-    Serial.print(sensorValues[i]);
-    Serial.print('\t');
-  }
-  Serial.println();
-
-  if(analogRead(sensorValues[i]) == 1){
-    //stop
-    //open gripper and park
-  }
-  elseif (analogRead(sensorValues[i]) == 0){
-    moveForward;
-*/
