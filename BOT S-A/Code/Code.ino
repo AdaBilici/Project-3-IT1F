@@ -3,9 +3,7 @@
 #include <SoftwareSerial.h>
 
 //===[ Time variables ]=============================
-
-int currentTime=0;
-int startTime=0;
+unsigned long time;
 
 //===[ DistanceSenzors ]============================
 
@@ -76,7 +74,15 @@ void stopRobot() {
   analogWrite(motorLeftBackwards, 0);
   analogWrite(motorLeftForward,0);
 }
-
+void turnLeft()
+{
+  leds.fill(RED, 0, 4);
+  leds.show();
+  analogWrite(motorLeftBackwards,0);
+  analogWrite(motorLeftForward, 0);
+  analogWrite(motorRightForward, 200);
+  analogWrite(motorRightBackwards,0);
+}
 void rotateOnAxis()
 {
   leds.fill(RED, 0, 4);
@@ -99,13 +105,27 @@ void rotatePulses(int nrOfPulses)
   countLeft=0;
   countRight=0;
   getDistanceLeft();
+  turnLeft();
   while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10)
     {
-      rotateOnAxis();
-     // showNrOfPulse();
-      
+     // showNrOfPulse(); 
       getDistanceLeft();
     }
+  stopRobot();
+}
+
+void moveForwardOnPulses(int nrOfPulses)
+{
+  Serial.println("start moving");
+  stopRobot();
+  countLeft=0;
+  countRight=0;
+  moveForward(150);
+  while ((countLeft<nrOfPulses && countRight<nrOfPulses))
+  {
+    showNrOfPulse();
+  }
+  Serial.println("stopMoving");
   stopRobot();
 }
 void showNrOfPulse()
@@ -138,7 +158,6 @@ void getDistanceLeft()
   durationLeft = pulseIn(echoPinLeft, HIGH);
   // Calculating the distance
   distanceLeft = durationLeft * 0.034 / 2; 
-  Serial.println(distanceLeft);
 }
 
 void getDistanceFront()
@@ -151,6 +170,12 @@ void getDistanceFront()
   // Calculating the distance
   distanceFront = durationFront * 0.034 / 2;
  
+}
+
+void wait(int waitingTime) {
+  time = millis();
+  while(millis() < time + waitingTime){
+    }
 }
 //===[SETUP ]============================
 
@@ -168,24 +193,40 @@ void setup() {
   leds.fill(BLUE,0,4);
   leds.show();
   setup_motor_pins();
+  // moveForwardOnPulses(20);
+  rotatePulses(68);
+  wait(2000);
 }
 
 //===[ LOOP ]============================
 
 void loop()
 {
- 
  getDistanceLeft();
  getDistanceFront();
- if (distanceLeft<=15)
+ if (distanceLeft<=10&&distanceFront>=10)
  {
-  moveForward(200);
+  moveForwardOnPulses(50);
+  stopRobot();
+  wait(200);
  }
- else
+ else if(distanceLeft>10 && distanceFront>10)
   {
-    rotatePulses(72);
+    moveForwardOnPulses(30);
+    rotatePulses(50);
+    stopRobot();
+    wait(200);
+    rotatePulses(68);
   }
+ else if(distanceLeft<10&&distanceFront<=10)
+ {
+  rotateCounterAxis();
+  wait(700);
+  }
+
+/*
  
+ */
 }
 
   
