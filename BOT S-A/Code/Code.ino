@@ -2,6 +2,11 @@
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
 
+//===[ Gripper ]===================================
+const int GRIPPER_PIN=4;
+const int GRIPPER_OPEN_PULSE=1600;
+const int GRIPPER_CLOSE_PULSE=971;
+const int GRIPPER_PULSE_REPEAT=10;
 //===[ Time variables ]=============================
 unsigned long time;
 
@@ -95,9 +100,9 @@ void rotateOnAxis()
 void rotateCounterAxis()
 {
   analogWrite(motorLeftBackwards,0);
-  analogWrite(motorLeftForward, 150);
+  analogWrite(motorLeftForward, 200);
   analogWrite(motorRightForward, 0);
-  analogWrite(motorRightBackwards,150);
+  analogWrite(motorRightBackwards,200);
 }
 void rotatePulses(int nrOfPulses)
 {
@@ -177,6 +182,26 @@ void wait(int waitingTime) {
   while(millis() < time + waitingTime){
     }
 }
+
+void gripperServo(int pulse)
+{
+    for(int i = 0; i < GRIPPER_PULSE_REPEAT;i++)
+    {
+        digitalWrite(GRIPPER_PIN,HIGH);
+        delayMicroseconds(pulse);
+        digitalWrite(GRIPPER_PIN,LOW);
+        delay(20);
+    }
+}
+
+void openGripper()
+{
+    gripperServo(GRIPPER_OPEN_PULSE);
+}
+void closeGripper()
+{
+  gripperServo(GRIPPER_CLOSE_PULSE);
+}
 //===[SETUP ]============================
 
 void setup() {
@@ -194,8 +219,12 @@ void setup() {
   leds.show();
   setup_motor_pins();
   // moveForwardOnPulses(20);
-  rotatePulses(68);
+  openGripper();
+  moveForwardOnPulses(100);
   wait(2000);
+  closeGripper();
+  rotatePulses(50);
+  moveForwardOnPulses(100);  
 }
 
 //===[ LOOP ]============================
@@ -220,13 +249,13 @@ void loop()
   }
  else if(distanceLeft<10&&distanceFront<=10)
  {
+  leds.fill(YELLOW , 0, 4);
+  leds.show();
   rotateCounterAxis();
-  wait(700);
+  wait(400);
   }
 
 /*
  
  */
 }
-
-  
