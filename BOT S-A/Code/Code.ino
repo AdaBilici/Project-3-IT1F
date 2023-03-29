@@ -59,12 +59,12 @@ void setup_motor_pins()
   pinMode(motorLeftBackwards,OUTPUT);
   pinMode(motorLeftForward,OUTPUT);
 }
-void moveForward(int power)
+void moveForward()
 {
   leds.fill(BLUE,0,4);
   leds.show();
-  digitalWrite(motorLeftForward,power);
-  digitalWrite(motorRightForward,power);
+  digitalWrite(motorLeftForward,175);
+  digitalWrite(motorRightForward,150);
 }
 
 void moveBackwards(int power=255)
@@ -100,9 +100,9 @@ void rotateOnAxis()
 void rotateCounterAxis()
 {
   analogWrite(motorLeftBackwards,0);
-  analogWrite(motorLeftForward, 200);
+  analogWrite(motorLeftForward, 150);
   analogWrite(motorRightForward, 0);
-  analogWrite(motorRightBackwards,200);
+  analogWrite(motorRightBackwards,150);
 }
 void rotatePulses(int nrOfPulses)
 {
@@ -113,7 +113,7 @@ void rotatePulses(int nrOfPulses)
   turnLeft();
   while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10)
     {
-     // showNrOfPulse(); 
+      showNrOfPulse(); 
       getDistanceLeft();
     }
   stopRobot();
@@ -121,16 +121,14 @@ void rotatePulses(int nrOfPulses)
 
 void moveForwardOnPulses(int nrOfPulses)
 {
-  Serial.println("start moving");
   stopRobot();
   countLeft=0;
   countRight=0;
-  moveForward(150);
+  moveForward();
   while ((countLeft<nrOfPulses && countRight<nrOfPulses))
   {
     showNrOfPulse();
   }
-  Serial.println("stopMoving");
   stopRobot();
 }
 void showNrOfPulse()
@@ -217,14 +215,19 @@ void setup() {
   leds.begin();
   leds.fill(BLUE,0,4);
   leds.show();
-  setup_motor_pins();
-  // moveForwardOnPulses(20);
+  countLeft=0;
+  countRight=0;
   openGripper();
-  moveForwardOnPulses(100);
-  wait(2000);
+  moveForwardOnPulses(150);
+  wait(500);
   closeGripper();
-  rotatePulses(50);
-  moveForwardOnPulses(100);  
+  countLeft=0;
+  countRight=0;
+  rotatePulses(80);
+  wait(1800);
+  moveForwardOnPulses(100);
+  wait(2000);  
+ 
 }
 
 //===[ LOOP ]============================
@@ -245,14 +248,17 @@ void loop()
     rotatePulses(50);
     stopRobot();
     wait(200);
-    rotatePulses(68);
+    moveForwardOnPulses(15);
+    rotatePulses(50);
   }
- else if(distanceLeft<10&&distanceFront<=10)
+ else if(distanceLeft<15&&distanceFront<=15)
  {
   leds.fill(YELLOW , 0, 4);
   leds.show();
+  getDistanceFront();
   rotateCounterAxis();
-  wait(400);
+  wait(400); 
+  moveForwardOnPulses(50);
   }
 
 /*
