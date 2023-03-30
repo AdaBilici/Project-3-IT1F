@@ -1,51 +1,44 @@
-//=============[LIBRARIES]=============
-
 #include <Adafruit_NeoPixel.h> // https://github.com/adafruit/Adafruit_NeoPixel
-#include <Servo.h> // https://github.com/arduino-libraries/Servo
+#include <Servo.h> // https://github.com/arduino-libraries/Servo/
 #include <QTRSensors.h> // https://github.com/pololu/qtr-sensors-arduino
-
-#ifdef __AVR__
-#include<avr/power.h> //required for 16 MHz Adafruit Trinket
-#endif  
   
-//=============[SET PINS]=============
-
+//=============[ Motor pins ]=============
 const int leftBack = 11; // Left wheel back
 const int leftForward = 6; // Left wheel forward
 const int rightForward = 3; // Right wheel forward
 const int rightBack = 5; // Right wheel back
 
+//=============[ Rotation sensors ]=============
+const int motor_R1 = 8;
+const int motor_R2 = 2;
+volatile int countLeft = 0;
+volatile int countRight = 0;
+
+//=============[ Gripper ]=============
+const int gripper = 7;
+Servo servoMotor;
+int pos = 40;
+
+//=============[ Neo pixels ]=============
 const int PIN = 4;
 const int numbPixels = 4;
 Adafruit_NeoPixel pixels(numbPixels, PIN, NEO_GRB + NEO_KHZ800);
 
-const int firstButtonPin = 12; // Button1 pin
-const int secondButtonPin = 8; // Button2 pin
-const int gripper = 7; // Gripper pin
-Servo servoMotor; // Declaring servo object
-  
-//=============[DECLARE VARIABLES]=============
-
-int pos = 40;
-int buttonStateOne = 0;
-int buttonStateTwo = 0;
-int val;
-
-unsigned long time;
-
+//=============[ Line sensor ]=============
 QTRSensors qtr;
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
+unsigned long time;
 
-//=============[SETUP]=============
+boolean checkEnd = false;
+boolean startRace = false;
+
+
+//=============[SETUP]====================================================
 
 void setup() {
-  // QTRsensor setup -----------------------------------------------------------------
-  
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
-  Serial.begin(9600);
-  pixels.begin();
   
   delay(500);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -71,11 +64,10 @@ void setup() {
     } else if (i == 99) {
       closeGripper();
     }
-    qtr.calibrate(); 
+    qtr.calibrate();
   }
   digitalWrite(LED_BUILTIN, LOW);
 
-  Serial.begin(9600);
   for (uint8_t i = 0; i < SensorCount; i++)
   {
     Serial.print(qtr.calibrationOn.minimum[i]);
@@ -83,7 +75,6 @@ void setup() {
   }
   Serial.println();
   
-  // print the calibration maximum values measured when emitters were on
   for (uint8_t i = 0; i < SensorCount; i++)
   {
     Serial.print(qtr.calibrationOn.maximum[i]);
@@ -95,21 +86,27 @@ void setup() {
   
   // Gripper setup
   servoMotor.attach(7);
-  pinMode(firstButtonPin, INPUT);
-  pinMode(secondButtonPin, INPUT);
+  
+  pinMode(motor_R1, INPUT_PULLUP);
+  pinMode(motor_R2, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(motor_R1),countA,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(motor_R2),countB,CHANGE);
 
-  // Wheels setup
   pinMode(leftBack, OUTPUT);
   pinMode(leftForward, OUTPUT);
   pinMode(rightForward, OUTPUT);
   pinMode(rightBack, OUTPUT);
-  cornerLeft(); 
+  Serial.begin(9600);
+
+  cornerLeft();
   wait(800);
 }
 
 //=============[LOOP]=============
 
 void loop() {
+  countRight = 0;
+  countLeft = 0;
  // sensorRead();
  // read raw sensor values
   qtr.read(sensorValues);
@@ -124,12 +121,37 @@ void loop() {
   Serial.println();
   Serial.print("Distance = ");
   Serial.println(" cm");
-
+   if(sensorValues[0] > 600 && sensorValues[7] > 600){
+      stopCar();
+      wait(200);
+      moveForward();
+      wait(100);
+      stopCar();
+      wait(200);
+      checkEnd = true;
+      qtr.read(sensorValues);
+      if (checkEnd = true) {
+        if(sensorValues[0] < 600 && sensorValues[7] < 600){
+          stopCar();
+          wait(100);
+          cornerRight();
+          wait(800);
+         }else if(sensorValues[2] > 600 && sensorValues[5] > 600){
+          openGripper();
+          wait(200);
+          moveBackwards();
+          wait(1000);
+          stopCar();
+          wait(1000000);
+        }
+      }
+    }
   if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-    if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600) {
+    if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600 && sensorValues[6] < 600 && sensorValues[7] < 600 ) {
+      stopCar();
+      wait(100);
       cornerRight();
       wait(800);
-      stopCar();
       pixels.setPixelColor(0, pixels.Color(0,0,0));
       pixels.setPixelColor(1, pixels.Color(0,0,0));
       pixels.setPixelColor(2, pixels.Color(55,0,0));
@@ -142,7 +164,7 @@ void loop() {
       pixels.setPixelColor(1, pixels.Color(0,0,0));
       pixels.setPixelColor(2, pixels.Color(0,0,0));
       pixels.setPixelColor(3, pixels.Color(0,0,0));
-    } else {
+    }else {
       moveForward();
       pixels.setPixelColor(0, pixels.Color(0,0,0));
       pixels.setPixelColor(1, pixels.Color(0,0,0));
@@ -165,13 +187,11 @@ void loop() {
     pixels.setPixelColor(2, pixels.Color(0,0,0));
     pixels.setPixelColor(3, pixels.Color(0,55,0));
     pixels.show();
-  } else if (sensorValues < 600) {
+  }else{
+    wait(200);
+    stopCar();
+    wait(20);
     rotate();
-    pixels.setPixelColor(0, pixels.Color(0,0,200));
-    pixels.setPixelColor(1, pixels.Color(0,0,200));
-    pixels.setPixelColor(2, pixels.Color(0,0,200));
-    pixels.setPixelColor(3, pixels.Color(0,0,200));
-    pixels.show();
   }
 }
 /**************[END OF PROGRAM]**************/
@@ -180,8 +200,8 @@ void loop() {
 
 void moveForward() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 230);
-  analogWrite(rightForward, 210);
+  analogWrite(leftForward, 200);
+  analogWrite(rightForward, 175);
   analogWrite(rightBack,0);
 }
 
@@ -193,7 +213,7 @@ void stopCar() {
 }
 
 void moveBackwards() {
-  analogWrite(leftBack,200);
+  analogWrite(leftBack,220);
   analogWrite(leftForward, 0);
   analogWrite(rightForward, 0);
   analogWrite(rightBack, 190);
@@ -201,20 +221,20 @@ void moveBackwards() {
 
 void turnLeft() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 110);
-  analogWrite(rightForward, 210);
+  analogWrite(leftForward, 90);
+  analogWrite(rightForward, 200);
   analogWrite(rightBack,0);
 }
 
 void turnRight() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 220);
-  analogWrite(rightForward, 100);
+  analogWrite(leftForward, 200);
+  analogWrite(rightForward, 80);
   analogWrite(rightBack,0);
 }
 
 void rotate() {
-  analogWrite(leftBack,180);
+  analogWrite(leftBack,175);
   analogWrite(leftForward, 0);
   analogWrite(rightForward,155);
   analogWrite(rightBack,0);
@@ -235,7 +255,7 @@ void cornerLeft(){
 }
 
 void closeGripper() {
-  servoMotor.write(35);  
+  servoMotor.write(41);  
 }
 
 void openGripper() {
@@ -260,4 +280,15 @@ void wait(int timeToWait_2){
   
   while(millis() < time + timeToWait_2){
   }
+}
+void countA() {
+  noInterrupts();
+  countLeft++;
+  interrupts();
+}
+
+void countB() {
+  noInterrupts();
+  countRight++;
+  interrupts();
 }
