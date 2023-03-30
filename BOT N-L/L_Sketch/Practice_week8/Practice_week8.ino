@@ -33,6 +33,8 @@ unsigned long time;
 boolean checkEnd = false;
 boolean startRace = false;
 
+const int treshold = 800;
+
 
 //=============[SETUP]====================================================
 
@@ -47,19 +49,19 @@ void setup() {
   for (uint16_t i = 0; i < 100; i++){
     if (i == 0) {
       moveForward();
-      delay(270);
+      delay(335);
       stopCar();
     } else if (i == 25) {
       moveForward();
-      delay(270);
+      delay(335);
       stopCar();
     } else if (i == 50) {
       moveForward();
-      delay(270);
+      delay(335);
       stopCar();
     } else if (i == 75) {
       moveForward();
-      delay(270);
+      delay(335);
       stopCar();
     } else if (i == 99) {
       closeGripper();
@@ -107,21 +109,10 @@ void setup() {
 void loop() {
   countRight = 0;
   countLeft = 0;
- // sensorRead();
- // read raw sensor values
-  qtr.read(sensorValues);
-
-  // print the sensor values as numbers from 0 to 1023, where 0 means maximum
-  // reflectance and 1023 means minimum reflectance
-  for (uint8_t i = 0; i < SensorCount; i++)
-  {
-    Serial.print(sensorValues[i]);
-    Serial.print('\t');
-  }
-  Serial.println();
-  Serial.print("Distance = ");
-  Serial.println(" cm");
-   if(sensorValues[0] > 600 && sensorValues[7] > 600){
+  sensorRead();
+  
+  if (startRace == true) {
+    if(sensorValues[0] > treshold && sensorValues[7] > treshold){ // try with sv1 and sv7
       stopCar();
       wait(200);
       moveForward();
@@ -129,14 +120,14 @@ void loop() {
       stopCar();
       wait(200);
       checkEnd = true;
-      qtr.read(sensorValues);
+      sensorRead();
       if (checkEnd = true) {
-        if(sensorValues[0] < 600 && sensorValues[7] < 600){
+        if (sensorValues[0] < treshold && sensorValues[7] < treshold) {
           stopCar();
           wait(100);
           cornerRight();
           wait(800);
-         }else if(sensorValues[2] > 600 && sensorValues[5] > 600){
+        } else if (sensorValues[2] > treshold && sensorValues[5] > treshold) {
           openGripper();
           wait(200);
           moveBackwards();
@@ -146,52 +137,55 @@ void loop() {
         }
       }
     }
-  if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-    if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600 && sensorValues[6] < 600 && sensorValues[7] < 600 ) {
-      stopCar();
-      wait(100);
-      cornerRight();
-      wait(800);
+    
+    if (sensorValues[3] > treshold || sensorValues[4] > treshold) {
+      if (sensorValues[0] > treshold && sensorValues[1] > treshold && sensorValues[2] > treshold && sensorValues[6] < treshold && sensorValues[7] < treshold) {
+        stopCar();
+        wait(100);
+        cornerRight();
+        wait(800);
+        pixels.setPixelColor(0, pixels.Color(0,0,0));
+        pixels.setPixelColor(1, pixels.Color(0,0,0));
+        pixels.setPixelColor(2, pixels.Color(55,0,0));
+        pixels.setPixelColor(3, pixels.Color(0,0,0));
+        pixels.show();
+      } else if ((sensorValues[3] > treshold || sensorValues[4] > treshold) && (sensorValues[1]< treshold || sensorValues[2] < treshold || sensorValues[3]< treshold)) {
+        moveForward();
+        pixels.setPixelColor(0, pixels.Color(0,0,0));
+        pixels.setPixelColor(1, pixels.Color(0,0,0));
+        pixels.setPixelColor(2, pixels.Color(0,0,0));
+        pixels.setPixelColor(3, pixels.Color(0,0,0));
+      } else {
+        moveForward();
+        pixels.setPixelColor(0, pixels.Color(0,0,0));
+        pixels.setPixelColor(1, pixels.Color(0,0,0));
+        pixels.setPixelColor(2, pixels.Color(0,0,0));
+        pixels.setPixelColor(3, pixels.Color(0,0,0));  
+      }
+    } else if (sensorValues[1] > treshold || sensorValues[2] > treshold) {
+      turnRight();
       pixels.setPixelColor(0, pixels.Color(0,0,0));
       pixels.setPixelColor(1, pixels.Color(0,0,0));
       pixels.setPixelColor(2, pixels.Color(55,0,0));
       pixels.setPixelColor(3, pixels.Color(0,0,0));
       pixels.show();
-    }
-     else if ((sensorValues[2] > 600 || sensorValues[3] > 600 || sensorValues[4] > 600) && (sensorValues[1]< 600 || sensorValues[2] < 600 || sensorValues[3]<600)) {
-      moveForward();
+      pixels.show();
+    } else if (sensorValues[5] > treshold || sensorValues[6] > treshold) {
+      turnLeft();
       pixels.setPixelColor(0, pixels.Color(0,0,0));
       pixels.setPixelColor(1, pixels.Color(0,0,0));
       pixels.setPixelColor(2, pixels.Color(0,0,0));
-      pixels.setPixelColor(3, pixels.Color(0,0,0));
-    }else {
-      moveForward();
-      pixels.setPixelColor(0, pixels.Color(0,0,0));
-      pixels.setPixelColor(1, pixels.Color(0,0,0));
-      pixels.setPixelColor(2, pixels.Color(0,0,0));
-      pixels.setPixelColor(3, pixels.Color(0,0,0));
-      
+      pixels.setPixelColor(3, pixels.Color(0,55,0));
+      pixels.show();
+    } else {
+      wait(200);
+      stopCar();
+      wait(20);
+      rotate();
     }
-  } else if (sensorValues[0] > 600 || sensorValues[1] > 600 || sensorValues[2] > 600) {
-    turnRight();
-    pixels.setPixelColor(0, pixels.Color(0,0,0));
-    pixels.setPixelColor(1, pixels.Color(0,0,0));
-    pixels.setPixelColor(2, pixels.Color(55,0,0));
-    pixels.setPixelColor(3, pixels.Color(0,0,0));
-    pixels.show();
-    pixels.show();
-  } else if (sensorValues[5] > 600 || sensorValues[6] > 600 || sensorValues[7] > 600) {
-    turnLeft();
-    pixels.setPixelColor(0, pixels.Color(0,0,0));
-    pixels.setPixelColor(1, pixels.Color(0,0,0));
-    pixels.setPixelColor(2, pixels.Color(0,0,0));
-    pixels.setPixelColor(3, pixels.Color(0,55,0));
-    pixels.show();
-  }else{
-    wait(200);
-    stopCar();
-    wait(20);
-    rotate();
+  } else {
+    startFunction();
+    startRace = true;
   }
 }
 /**************[END OF PROGRAM]**************/
@@ -200,8 +194,8 @@ void loop() {
 
 void moveForward() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 200);
-  analogWrite(rightForward, 175);
+  analogWrite(leftForward, 210);
+  analogWrite(rightForward, 180);
   analogWrite(rightBack,0);
 }
 
@@ -213,7 +207,7 @@ void stopCar() {
 }
 
 void moveBackwards() {
-  analogWrite(leftBack,220);
+  analogWrite(leftBack,210);
   analogWrite(leftForward, 0);
   analogWrite(rightForward, 0);
   analogWrite(rightBack, 190);
@@ -222,7 +216,7 @@ void moveBackwards() {
 void turnLeft() {
   analogWrite(leftBack,0);
   analogWrite(leftForward, 90);
-  analogWrite(rightForward, 200);
+  analogWrite(rightForward, 185);
   analogWrite(rightBack,0);
 }
 
@@ -242,7 +236,7 @@ void rotate() {
 
 void cornerRight(){
   analogWrite(leftBack,0); //Left wheel backward
-  analogWrite(leftForward,220);//Left wheel forward
+  analogWrite(leftForward,200);//Left wheel forward
   analogWrite(rightForward,0); //Right wheel forward
   analogWrite(rightBack,0); //Right wheel backward   
 } 
@@ -263,6 +257,21 @@ void openGripper() {
 }
 
 void sensorRead() {
+  /*
+  // read raw sensor values
+  qtr.read(sensorValues);
+
+  // print the sensor values as numbers from 0 to 1023, where 0 means maximum
+  // reflectance and 1023 means minimum reflectance
+  for (uint8_t i = 0; i < SensorCount; i++)
+  {
+    Serial.print(sensorValues[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
+  Serial.print("Distance = ");
+  Serial.println(" cm");
+  */
   uint16_t position = qtr.readLineBlack(sensorValues);
 
   for (uint8_t i = 0; i < SensorCount; i++)
@@ -271,8 +280,6 @@ void sensorRead() {
     Serial.print('\t');
   }
   Serial.println(position);
-
-  delay(250);
 }
 
 void wait(int timeToWait_2){
@@ -291,4 +298,8 @@ void countB() {
   noInterrupts();
   countRight++;
   interrupts();
+}
+
+void startFunction() {
+  
 }
