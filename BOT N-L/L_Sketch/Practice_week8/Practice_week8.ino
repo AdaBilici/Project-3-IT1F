@@ -31,6 +31,7 @@ uint16_t sensorValues[SensorCount];
 unsigned long time;
 
 boolean checkEnd = false;
+boolean startRace = false;
 
 
 //=============[SETUP]====================================================
@@ -122,39 +123,35 @@ void loop() {
   Serial.println(" cm");
    if(sensorValues[0] > 600 && sensorValues[7] > 600){
       stopCar();
-      wait(500);
-      moveForward();
       wait(200);
+      moveForward();
+      wait(100);
       stopCar();
-      wait(400);
+      wait(200);
       checkEnd = true;
-       qtr.read(sensorValues);
+      qtr.read(sensorValues);
       if (checkEnd = true) {
-      if(sensorValues[1] < 600 && sensorValues[6] < 600){
+        if(sensorValues[0] < 600 && sensorValues[7] < 600){
           stopCar();
           wait(100);
           cornerRight();
           wait(800);
-       }
-       else  if(sensorValues[0] > 600 && sensorValues[7] > 600){
+         }else if(sensorValues[2] > 600 && sensorValues[5] > 600){
           openGripper();
           wait(200);
           moveBackwards();
           wait(1000);
           stopCar();
-          wait(10000000);
+          wait(1000000);
         }
       }
     }
   if (sensorValues[3] > 600 || sensorValues[4] > 600) {
     if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600 && sensorValues[6] < 600 && sensorValues[7] < 600 ) {
       stopCar();
-      wait(200);
+      wait(100);
       cornerRight();
       wait(800);
-      /*if(sensorValues[6] > 600 && sensorValues[7] > 600 && sensorValues[8] > 600){
-        cornerLeft();
-      }*/
       pixels.setPixelColor(0, pixels.Color(0,0,0));
       pixels.setPixelColor(1, pixels.Color(0,0,0));
       pixels.setPixelColor(2, pixels.Color(55,0,0));
@@ -203,8 +200,8 @@ void loop() {
 
 void moveForward() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 210);
-  analogWrite(rightForward, 185);
+  analogWrite(leftForward, 200);
+  analogWrite(rightForward, 175);
   analogWrite(rightBack,0);
 }
 
@@ -216,7 +213,7 @@ void stopCar() {
 }
 
 void moveBackwards() {
-  analogWrite(leftBack,215);
+  analogWrite(leftBack,220);
   analogWrite(leftForward, 0);
   analogWrite(rightForward, 0);
   analogWrite(rightBack, 190);
@@ -224,15 +221,15 @@ void moveBackwards() {
 
 void turnLeft() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 100);
-  analogWrite(rightForward, 220);
+  analogWrite(leftForward, 90);
+  analogWrite(rightForward, 200);
   analogWrite(rightBack,0);
 }
 
 void turnRight() {
   analogWrite(leftBack,0);
-  analogWrite(leftForward, 235);
-  analogWrite(rightForward, 70);
+  analogWrite(leftForward, 200);
+  analogWrite(rightForward, 80);
   analogWrite(rightBack,0);
 }
 
