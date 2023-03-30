@@ -4,8 +4,8 @@
 // ================= PINS ====================
 // wheel movement and sensors
 const int wheelAforward = 3; //used to be 10
-const int wheelABackward = 0;
-const int wheelBBackward = 0;
+const int wheelAbackward = 12;
+const int wheelBbackward = 13;
 const int wheelBforward = 5; //used to be 11
 const int PIXEL_PIN=2;
 const int PIXEL_NUMBER=4;
@@ -69,9 +69,9 @@ boolean hasInitiatedStart;
 
 void setup() {
 // wheel movement
-pinMode(wheelABackward, OUTPUT);
+pinMode(wheelAbackward, OUTPUT);
 pinMode(wheelAforward, OUTPUT);
-pinMode(wheelBBackward, OUTPUT);
+pinMode(wheelBbackward, OUTPUT);
 pinMode(wheelBforward, OUTPUT);
 
 //sensors
@@ -186,6 +186,7 @@ void lineFollowSequence(){
 }
 
 void avoidObjectSequence(){
+  Serial.println("starting sequence avoid");
   forwardTurn(90);
   delay(500);
   forwardTurn(0);
@@ -200,6 +201,19 @@ void avoidObjectSequence(){
 
 void endSequence(){
   Serial.println("end");
+  movementStop();
+  delay(500);
+  grab(1);
+  backward();
+  delay(1000);
+  forwardTurn(90);
+  delay(700);
+  forwardTurn(0);
+  delay(100);
+  forwardTurn(-90);
+  delay(650);
+  forwardTurn(0);
+  delay(600);
   updateLights(4);
   movementStop();
   while(true){
@@ -383,8 +397,8 @@ String getSensorBoolValuesString(){
 // moves the robot forward, not practical, to be used for testing
 void simpleforward(int speed){
   colorStatus = 0;
-  analogWrite(wheelABackward, 0);
-  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAbackward, 0);
+  analogWrite(wheelBbackward, 0);
   currentSpeedPercent = speed; 
   speed = scaleFromPercent(speed);
   
@@ -394,16 +408,16 @@ void simpleforward(int speed){
 
 // does 90 degree turn left
 void simpleLeft(){
-  analogWrite(wheelABackward, 0);
-  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAbackward, 0);
+  analogWrite(wheelBbackward, 0);
   analogWrite(wheelAforward, 0);
   analogWrite(wheelBforward, 255);
   delay(800);
 }
 
 void complexLeft(int delayA){ // does a turn to the left
-  analogWrite(wheelABackward, 0);
-  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAbackward, 0);
+  analogWrite(wheelBbackward, 0);
   analogWrite(wheelAforward, 0);
   analogWrite(wheelBforward, 255);
   delay(delayA);
@@ -411,8 +425,8 @@ void complexLeft(int delayA){ // does a turn to the left
 
 // does 90 degree turn right
 void simpleRight(){
-  analogWrite(wheelABackward, 0);
-  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAbackward, 0);
+  analogWrite(wheelBbackward, 0);
   analogWrite(wheelAforward, 255);
   analogWrite(wheelBforward, 0);
   delay(800);
@@ -438,8 +452,8 @@ void forwardTurn(int turnPercent){
     int forWheelSpeed = scaleFromPercent(currentSpeedPercent);
     
 
-    analogWrite(wheelABackward, 0);
-    analogWrite(wheelBBackward, 0);
+    analogWrite(wheelAbackward, 0);
+    analogWrite(wheelBbackward, 0);
     
   if (turnPercent < 0){
     analogWrite(wheelAforward, turnWheelSpeed);
@@ -454,11 +468,18 @@ void forwardTurn(int turnPercent){
   }
 }
 
+void backward(){
+  analogWrite(wheelAforward, 0);
+  analogWrite(wheelBforward, 0);
+  analogWrite(wheelAbackward, 255);
+  analogWrite(wheelBbackward, 255);
+}
+
 void movementStop(){
   analogWrite(wheelAforward, 0);
   analogWrite(wheelBforward, 0);
-  analogWrite(wheelABackward, 0);
-  analogWrite(wheelBBackward, 0);
+  analogWrite(wheelAbackward, 0);
+  analogWrite(wheelBbackward, 0);
 }
 
 // grab an object using a grabber, or move the grabber to the specified degrees using the optional argument
