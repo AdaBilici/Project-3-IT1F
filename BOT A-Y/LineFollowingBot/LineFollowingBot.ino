@@ -57,7 +57,7 @@ int objectDetectionCount;
 int maxObjectDetectionCount;
 boolean startDetectionToggle;
 int startDetectionCount; // counts lines at start sequence;
-int objectDetectionBuffer; // detects objects every x frames
+unsigned long objectDetectionBuffer; // detects objects every x frames
 int objectDetectionBufferRate;
 int phase;
 
@@ -159,6 +159,7 @@ void startSequence(){
     updateLights(0);
     forwardTurn(0);
     delay(300);
+    Serial.println("ending start sequence");
     phase = 1;
   }
 }
