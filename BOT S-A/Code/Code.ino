@@ -21,6 +21,7 @@ long durationLeft;
 int distanceLeft;
 const int trigPinLeft = 5;
 const int echoPinLeft = 6;
+int distanceOverride = 0;
 
 //===[ Motor pins ]======================
 
@@ -69,12 +70,20 @@ void moveForward()
   digitalWrite(motorLeftBackwards,0);
 }
 
+void moveBackwardsRotate()
+{
+  analogWrite(motorRightBackwards,255);
+  analogWrite(motorLeftBackwards,90);
+  analogWrite(motorRightForward, 0);
+  analogWrite(motorLeftForward,0);
+}
+
 void moveBackwards()
 {
-  digitalWrite(motorRightBackwards,255);
-  digitalWrite(motorLeftBackwards,255);
-  digitalWrite(motorRightForward, 0);
-  digitalWrite(motorLeftForward,0);
+  analogWrite(motorRightBackwards,255);
+  analogWrite(motorLeftBackwards, 200);
+  analogWrite(motorRightForward, 0);
+  analogWrite(motorLeftForward,0);
 }
 
 void stopRobot() {
@@ -116,15 +125,18 @@ void rotatePulses(int nrOfPulses)
   int lastCountRight = -1;
   int lastCountLeft = -1;
   long movementBuffer = millis() + movementStuckBufferDelay;
+  boolean isActive = true;
   getDistanceLeft();
   turnLeft();
-  while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10)
+  while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10 && isActive)
     {
       if(countLeft == lastCountLeft && countRight == lastCountRight){ //wheel has not pulsed yet
         if(millis() > movementBuffer){ //if not moved for duration
           movementBuffer = millis() + movementStuckBufferDelay;
-          moveBackwards();
-          wait(300);
+          leds.fill(WHITE, 0, 4);
+          leds.show();
+          moveBackwardsRotate();
+          wait(500);
         }
       }
       else{
@@ -132,8 +144,9 @@ void rotatePulses(int nrOfPulses)
         lastCountLeft = countLeft;
         lastCountRight = countRight;
       }
-      showNrOfPulse(); 
+      showNrOfPulse();
       getDistanceLeft();
+      getDistanceFront();
     }
   stopRobot();
 }
@@ -146,12 +159,15 @@ void moveForwardOnPulses(int nrOfPulses)
   int lastCountRight = -1;
   int lastCountLeft = -1;
   long movementBuffer = millis() + movementStuckBufferDelay;
+  boolean isActive = true;
   moveForward();
-  while ((countLeft<nrOfPulses && countRight<nrOfPulses))
+  while ((countLeft<nrOfPulses && countRight<nrOfPulses) && isActive)
   {
     if(countLeft == lastCountLeft && countRight == lastCountRight){ //wheel has not pulsed yet
         if(millis() > movementBuffer){ //if not moved for duration
           movementBuffer = millis() + movementStuckBufferDelay;
+          leds.fill(WHITE, 0, 4);
+          leds.show();
           moveBackwards();
           wait(300);
         }
@@ -162,6 +178,7 @@ void moveForwardOnPulses(int nrOfPulses)
         lastCountRight = countRight;
       }
     showNrOfPulse();
+    getDistanceFront();
   }
   stopRobot();
 }
@@ -194,7 +211,7 @@ void getDistanceLeft()
   // Reads the echoPin, returns the sound wave travel time in microseconds
   durationLeft = pulseIn(echoPinLeft, HIGH);
   // Calculating the distance
-  distanceLeft = durationLeft * 0.034 / 2; 
+  distanceLeft = durationLeft * 0.034 / 2;
 }
 
 void getDistanceFront()
@@ -206,6 +223,7 @@ void getDistanceFront()
   durationFront = pulseIn(echoPinFront, HIGH);
   // Calculating the distance
   distanceFront = durationFront * 0.034 / 2;
+  Serial.println(distanceFront);
  
 }
 
@@ -250,7 +268,7 @@ void setup() {
   leds.fill(BLUE,0,4);
   leds.show();
   countLeft=0;
-  countRight=0;
+  countRight=0; 
 //  openGripper();
 //  moveForwardOnPulses(150);
 //  wait(500);
@@ -292,5 +310,11 @@ void loop()
   rotateCounterAxis();
   wait(400); 
   moveForwardOnPulses(50);
+  }
+  else{
+    leds.fill(WHITE,0,4);
+    leds.show();
+    moveBackwards();
+    wait(300);
   }
 }
