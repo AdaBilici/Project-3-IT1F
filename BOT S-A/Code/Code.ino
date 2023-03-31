@@ -217,16 +217,16 @@ void setup() {
   leds.show();
   countLeft=0;
   countRight=0;
-  openGripper();
-  moveForwardOnPulses(150);
-  wait(500);
-  closeGripper();
-  countLeft=0;
-  countRight=0;
-  rotatePulses(80);
-  wait(1800);
-  moveForwardOnPulses(100);
-  wait(2000);  
+//  openGripper();
+//  moveForwardOnPulses(150);
+//  wait(500);
+//  closeGripper();
+//  countLeft=0;
+//  countRight=0;
+//  rotatePulses(80);
+//  wait(1800);
+//  moveForwardOnPulses(100);
+//  wait(2000);  
  
 }
 
@@ -238,13 +238,12 @@ void loop()
  getDistanceFront();
  if (distanceLeft<=10&&distanceFront>=10)
  {
-  moveForwardOnPulses(50);
+  moveForwardOnPulses(30);
   stopRobot();
   wait(200);
  }
  else if(distanceLeft>10 && distanceFront>10)
   {
-    moveForwardOnPulses(30);
     rotatePulses(50);
     stopRobot();
     wait(200);
@@ -260,8 +259,4 @@ void loop()
   wait(400); 
   moveForwardOnPulses(50);
   }
-
-/*
- 
- */
 }
