@@ -42,19 +42,19 @@ void setup() {
   for (uint16_t i = 0; i < 100; i++){
     if (i == 0) {
       moveForward();
-      delay(270);
+      delay(280);
       stopCar();
     } else if (i == 25) {
       moveForward();
-      delay(270);
+      delay(280);
       stopCar();
     } else if (i == 50) {
       moveForward();
-      delay(270);
+      delay(280);
       stopCar();
     } else if (i == 75) {
       moveForward();
-      delay(270);
+      delay(280);
       stopCar();
     } else if (i == 99) {
       closeGripper();
@@ -94,7 +94,7 @@ void setup() {
   Serial.begin(9600);
 
   cornerLeft();
-  wait(800);
+  wait(700);
 }
 
 //=============[LOOP]====================================================
@@ -105,47 +105,91 @@ void loop() {
   countRight = 0;
   
   if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-    if (sensorValues[0] > 600 && sensorValues[1] > 600 && sensorValues[2] > 600) {
-      stopCar();
-      wait(300);
-      moveForward();
-      wait(150);
-      while(countRight < 115 && countLeft < 115) {
+    if (sensorValues[0] > 600 || sensorValues[1] > 600) {
+      closeGripper();
+      while(countRight < 120 && countLeft < 120) {
+        closeGripper();
         cornerRight();
         countA();
         countB();
       }
-    } else if (sensorValues[7] > 600 && sensorValues[6] > 600 && sensorValues[5] > 600) {
+      closeGripper();
+    } else if (sensorValues[7] > 600 || sensorValues[6] > 600) {
       stopCar();
-      wait(300);
-      if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-        moveForward();
-        wait(350);
-      }
+      wait(200);
+      moveForward();
+      wait(350);
+      closeGripper();
     } else if ((sensorValues[2] > 600 || sensorValues[3] > 600 || sensorValues[4] > 600) && (sensorValues[1]< 600 || sensorValues[2] < 600 || sensorValues[3]<600)) {
       moveForward();
+      closeGripper();
     } else {
       moveForward();
+      closeGripper();
     }
   } else if (sensorValues[0] > 600 || sensorValues[1] > 600 || sensorValues[2] > 600) {
     turnRight();
+    closeGripper();
   } else if (sensorValues[5] > 600 || sensorValues[6] > 600 || sensorValues[7] > 600) {
     turnLeft();
+    closeGripper();
   } else if (sensorValues < 600) {
-    stopCar();
-    wait(300);
-    while(countLeft < 95 && countRight < 95) {
+    while(countLeft < 102 && countRight < 102) {
       rotate();
       countA();
       countB();
+      closeGripper();
     }
     stopCar();
     wait(200);
-  } else if (sensorValues[3] > 600 || sensorValues[4] > 600) {
-    stopCar();
-    wait(500);
-    moveForward();
   }
+
+    /*
+  sensorRead();
+  countLeft = 0;
+  countRight = 0;
+  
+  if (sensorValues[3] > 600 || sensorValues[4] > 600) {
+    if (sensorValues[3] > 600 && sensorValues[4] > 600) {
+      moveForward();
+    } else if (sensorValues[1] > 600 || sensorValues[2] > 600) {
+      turnRight();
+      closeGripper();
+    } else if (sensorValues[5] > 600 || sensorValues[6] > 600) {
+      turnLeft();
+      closeGripper();
+    } else {
+      moveForward();
+    }
+  } else if (sensorValues < 600) {
+    while(countLeft < 102 && countRight < 102) {
+      rotate();
+      countA();
+      countB();
+      closeGripper();
+    }
+    stopCar();
+    wait(200);
+  }
+  
+  if (sensorValues[0] > 600 || sensorValues[1] > 600) {
+    while(countRight < 120 && countLeft < 120) {
+        closeGripper();
+        cornerRight();
+        countA();
+        countB();
+    }
+  }
+
+  if (sensorValues[8] > 600 || sensorValues[7] > 600) {
+    while(countRight < 120 && countLeft < 120) {
+        closeGripper();
+        cornerLeft();
+        countA();
+        countB();
+    }
+  }
+  */
 }
 
 /**************[END OF PROGRAM]**************/
@@ -190,7 +234,7 @@ void turnRight() {
 void rotate() {
   analogWrite(leftBack,200);
   analogWrite(leftForward, 0);
-  analogWrite(rightForward,170);
+  analogWrite(rightForward,180);
   analogWrite(rightBack,0);
 }
 
@@ -229,7 +273,7 @@ void countB() {
 }
 
 void closeGripper() {
-  servoMotor.write(45);  
+  servoMotor.write(41);  
 }
 
 void openGripper() {
