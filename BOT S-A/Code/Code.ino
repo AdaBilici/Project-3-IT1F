@@ -22,13 +22,13 @@ int distanceLeft;
 const int trigPinLeft = 5;
 const int echoPinLeft = 6;
 
-
 //===[ Motor pins ]======================
 
 const int motorRightBackwards=13;
 const int motorRightForward=12;  
 const int motorLeftBackwards=11;
 const int motorLeftForward=10;
+const int movementStuckBufferDelay=1000;
 
 //===[ Motor tests for pulses ]====================
 
@@ -65,12 +65,16 @@ void moveForward()
   leds.show();
   digitalWrite(motorLeftForward,175);
   digitalWrite(motorRightForward,150);
+  digitalWrite(motorRightBackwards,0);
+  digitalWrite(motorLeftBackwards,0);
 }
 
-void moveBackwards(int power=255)
+void moveBackwards()
 {
-  digitalWrite(motorRightBackwards,power);
-  digitalWrite(motorLeftBackwards,power);
+  digitalWrite(motorRightBackwards,255);
+  digitalWrite(motorLeftBackwards,255);
+  digitalWrite(motorRightForward, 0);
+  digitalWrite(motorLeftForward,0);
 }
 
 void stopRobot() {
@@ -109,10 +113,25 @@ void rotatePulses(int nrOfPulses)
   stopRobot();
   countLeft=0;
   countRight=0;
+  int lastCountRight = -1;
+  int lastCountLeft = -1;
+  long movementBuffer = millis() + movementStuckBufferDelay;
   getDistanceLeft();
   turnLeft();
   while ((countLeft<nrOfPulses && countRight<nrOfPulses) && distanceLeft>=10)
     {
+      if(countLeft == lastCountLeft && countRight == lastCountRight){ //wheel has not pulsed yet
+        if(millis() > movementBuffer){ //if not moved for duration
+          movementBuffer = millis() + movementStuckBufferDelay;
+          moveBackwards();
+          wait(300);
+        }
+      }
+      else{
+        movementBuffer = millis() + movementStuckBufferDelay;
+        lastCountLeft = countLeft;
+        lastCountRight = countRight;
+      }
       showNrOfPulse(); 
       getDistanceLeft();
     }
@@ -124,9 +143,24 @@ void moveForwardOnPulses(int nrOfPulses)
   stopRobot();
   countLeft=0;
   countRight=0;
+  int lastCountRight = -1;
+  int lastCountLeft = -1;
+  long movementBuffer = millis() + movementStuckBufferDelay;
   moveForward();
   while ((countLeft<nrOfPulses && countRight<nrOfPulses))
   {
+    if(countLeft == lastCountLeft && countRight == lastCountRight){ //wheel has not pulsed yet
+        if(millis() > movementBuffer){ //if not moved for duration
+          movementBuffer = millis() + movementStuckBufferDelay;
+          moveBackwards();
+          wait(300);
+        }
+      }
+      else{
+        movementBuffer = millis() + movementStuckBufferDelay;
+        lastCountLeft = countLeft;
+        lastCountRight = countRight;
+      }
     showNrOfPulse();
   }
   stopRobot();
