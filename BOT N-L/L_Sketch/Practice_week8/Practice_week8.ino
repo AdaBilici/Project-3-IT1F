@@ -1,5 +1,4 @@
 #include <Adafruit_NeoPixel.h> // https://github.com/adafruit/Adafruit_NeoPixel
-#include <Servo.h> // https://github.com/arduino-libraries/Servo/
 #include <QTRSensors.h> // https://github.com/pololu/qtr-sensors-arduino
   
 //=============[ Motor pins ]=============
@@ -14,10 +13,14 @@ const int motor_R2 = 2;
 volatile int countLeft = 0;
 volatile int countRight = 0;
 
+//=============[ Distance sensors ]=============
+int trigPin = 13;
+int echoPin = 12;
+int distance;
+int duration;
+
 //=============[ Gripper ]=============
 const int gripper = 7;
-Servo servoMotor;
-int pos = 40;
 
 //=============[ Neo pixels ]=============
 const int PIN = 4;
@@ -33,61 +36,23 @@ unsigned long time;
 boolean checkEnd = false;
 boolean startRace = false;
 
-const int treshold = 800;
+const int treshold = 600;
 
 
 //=============[SETUP]====================================================
 
 void setup() {
+  openGripper();
+  
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);
-  
-  delay(500);
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-  
-  for (uint16_t i = 0; i < 100; i++){
-    if (i == 0) {
-      moveForward();
-      delay(335);
-      stopCar();
-    } else if (i == 25) {
-      moveForward();
-      delay(335);
-      stopCar();
-    } else if (i == 50) {
-      moveForward();
-      delay(335);
-      stopCar();
-    } else if (i == 75) {
-      moveForward();
-      delay(335);
-      stopCar();
-    } else if (i == 99) {
-      closeGripper();
-    }
-    qtr.calibrate();
-  }
-  digitalWrite(LED_BUILTIN, LOW);
 
-  for (uint8_t i = 0; i < SensorCount; i++)
-  {
-    Serial.print(qtr.calibrationOn.minimum[i]);
-    Serial.print(' ');
-  }
-  Serial.println();
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   
-  for (uint8_t i = 0; i < SensorCount; i++)
-  {
-    Serial.print(qtr.calibrationOn.maximum[i]);
-    Serial.print(' ');
-  }
-  Serial.println();
-  Serial.println();
-  delay(700);
-  
-  // Gripper setup
-  servoMotor.attach(7);
+  pinMode(gripper, OUTPUT);
   
   pinMode(motor_R1, INPUT_PULLUP);
   pinMode(motor_R2, INPUT_PULLUP);
@@ -99,9 +64,6 @@ void setup() {
   pinMode(rightForward, OUTPUT);
   pinMode(rightBack, OUTPUT);
   Serial.begin(9600);
-
-  cornerLeft();
-  wait(800);
 }
 
 //=============[LOOP]=============
@@ -110,9 +72,9 @@ void loop() {
   countRight = 0;
   countLeft = 0;
   sensorRead();
-  
+    
   if (startRace == true) {
-    if(sensorValues[0] > treshold && sensorValues[7] > treshold){ // try with sv1 and sv7
+    if(sensorValues[0] > treshold && sensorValues[7] > treshold){ // try with sv1 and sv6
       stopCar();
       wait(200);
       moveForward();
@@ -184,8 +146,7 @@ void loop() {
       rotate();
     }
   } else {
-    startFunction();
-    startRace = true;
+    getStartDistance();
   }
 }
 /**************[END OF PROGRAM]**************/
@@ -249,15 +210,24 @@ void cornerLeft(){
 }
 
 void closeGripper() {
-  servoMotor.write(41);  
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(gripper, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(gripper, LOW);
+    delay(10);
+  }
 }
 
 void openGripper() {
-  servoMotor.write(120);
+  for (int i = 0; i < 10; i++) {
+    digitalWrite(gripper, HIGH);
+    delayMicroseconds(1500);
+    digitalWrite(gripper, LOW);
+    delay(10);
+  }
 }
 
 void sensorRead() {
-  /*
   // read raw sensor values
   qtr.read(sensorValues);
 
@@ -271,15 +241,6 @@ void sensorRead() {
   Serial.println();
   Serial.print("Distance = ");
   Serial.println(" cm");
-  */
-  uint16_t position = qtr.readLineBlack(sensorValues);
-
-  for (uint8_t i = 0; i < SensorCount; i++)
-  {
-    Serial.print(sensorValues[i]);
-    Serial.print('\t');
-  }
-  Serial.println(position);
 }
 
 void wait(int timeToWait_2){
@@ -301,5 +262,45 @@ void countB() {
 }
 
 void startFunction() {
-  
+  stopCar();
+  wait(1000);
+  digitalWrite(LED_BUILTIN, HIGH);
+  for (uint16_t i = 0; i < 100; i++){
+    if (i == 0) {
+      moveForward();
+      delay(335);
+      stopCar();
+    } else if (i == 25) {
+      moveForward();
+      delay(335);
+      stopCar();
+    } else if (i == 50) {
+      moveForward();
+      delay(335);
+      stopCar();
+    } else if (i == 75) {
+      moveForward();
+      delay(335);
+      stopCar();
+    } else if (i == 99) {
+      closeGripper();
+    }
+    qtr.calibrate();
+  }
+  digitalWrite(LED_BUILTIN, LOW);
+  startRace = true;
+  cornerLeft();
+  wait(800);
+}
+
+void getStartDistance() {
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    duration = pulseIn(echoPin, HIGH);
+    distance = duration * 0.034 / 2;
+    //Serial.println(distance);
+    if (distance < 22) {
+      startFunction();
+    }
 }
