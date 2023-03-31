@@ -2,6 +2,12 @@
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
 
+boolean hasInitiatedStart = false;
+boolean hasStarted = false;
+
+const int lineSensors[] = {A0, A1, A2, A3, A4, A5, A6, A7};
+int lineSensorSensitivity = 700;
+
 //===[ Gripper ]===================================
 const int GRIPPER_PIN=4;
 const int GRIPPER_OPEN_PULSE=1600;
@@ -9,6 +15,7 @@ const int GRIPPER_CLOSE_PULSE=971;
 const int GRIPPER_PULSE_REPEAT=10;
 //===[ Time variables ]=============================
 unsigned long time;
+
 
 //===[ DistanceSenzors ]============================
 
@@ -52,6 +59,19 @@ const uint32_t BLUE=leds.Color(0,0,255);
 const uint32_t WHITE=leds.Color(255,255,255);
 const uint32_t START=leds.Color(0,0,0);
 //===[ Functions ]=================================
+
+boolean isBlackZone(){
+  int count = 0;
+  for(int i = 0; i < 8; i++){
+    if(analogRead(lineSensors[i]) > lineSensorSensitivity){
+      count ++;
+    }
+  }
+  if(count < 4){
+    return false;
+  }
+  return true;
+}
 
 void setup_motor_pins()
 { 
@@ -136,7 +156,7 @@ void rotatePulses(int nrOfPulses)
           leds.fill(WHITE, 0, 4);
           leds.show();
           moveBackwardsRotate();
-          wait(500);
+          wait(450);
         }
       }
       else{
@@ -144,10 +164,9 @@ void rotatePulses(int nrOfPulses)
         lastCountLeft = countLeft;
         lastCountRight = countRight;
       }
-      showNrOfPulse();
       getDistanceLeft();
       getDistanceFront();
-    }
+      }
   stopRobot();
 }
 
@@ -177,7 +196,6 @@ void moveForwardOnPulses(int nrOfPulses)
         lastCountLeft = countLeft;
         lastCountRight = countRight;
       }
-    showNrOfPulse();
     getDistanceFront();
   }
   stopRobot();
@@ -269,52 +287,64 @@ void setup() {
   leds.show();
   countLeft=0;
   countRight=0; 
-//  openGripper();
-//  moveForwardOnPulses(150);
-//  wait(500);
-//  closeGripper();
-//  countLeft=0;
-//  countRight=0;
-//  rotatePulses(80);
-//  wait(1800);
-//  moveForwardOnPulses(100);
-//  wait(2000);  
- 
 }
 
 //===[ LOOP ]============================
 
 void loop()
 {
- getDistanceLeft();
- getDistanceFront();
- if (distanceLeft<=10&&distanceFront>=10)
- {
-  moveForwardOnPulses(30);
-  stopRobot();
-  wait(200);
- }
- else if(distanceLeft>10 && distanceFront>10)
-  {
-    rotatePulses(50);
+  if(hasStarted){
+   getDistanceLeft();
+   getDistanceFront();
+   if (distanceLeft<=10&&distanceFront>=10)
+   {
+    moveForwardOnPulses(30);
     stopRobot();
     wait(200);
-    moveForwardOnPulses(15);
-    rotatePulses(50);
-  }
- else if(distanceLeft<15&&distanceFront<=15)
- {
-  leds.fill(YELLOW , 0, 4);
-  leds.show();
-  getDistanceFront();
-  rotateCounterAxis();
-  wait(400); 
-  moveForwardOnPulses(50);
-  }
-  else{
-    leds.fill(WHITE,0,4);
+   }
+   else if(distanceLeft>10 && distanceFront>10)
+    {
+      rotatePulses(50);
+      stopRobot();
+      wait(200);
+      moveForwardOnPulses(15);
+      rotatePulses(50);
+    }
+   else if(distanceLeft<15&&distanceFront<=15)
+   {
+    leds.fill(YELLOW , 0, 4);
     leds.show();
-    moveBackwards();
-    wait(300);
+    getDistanceFront();
+    rotateCounterAxis();
+    wait(400); 
+    moveForwardOnPulses(30);
+    }
+    else{
+      leds.fill(WHITE,0,4);
+      leds.show();
+      moveBackwards();
+      wait(300);
+    }
+  }
+  else {
+    if(hasInitiatedStart == true){
+      moveForward();
+      wait(600);
+      closeGripper();
+      countLeft=0;
+      countRight=0;
+      rotatePulses(50);
+      moveForwardOnPulses(80);
+      hasStarted = true;
+    }
+    else {
+      wait(1000);
+      getDistanceFront();
+      if(distanceFront < 15){
+        openGripper();
+        wait(1500);
+        hasInitiatedStart = true;
+      }
+    }
   }
 }
