@@ -207,14 +207,6 @@ void endSequence(){
   grab(1);
   backward();
   delay(1000);
-  forwardTurn(90);
-  delay(700);
-  forwardTurn(0);
-  delay(100);
-  forwardTurn(-90);
-  delay(650);
-  forwardTurn(0);
-  delay(600);
   updateLights(4);
   movementStop();
   while(true){
